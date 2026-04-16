@@ -110,7 +110,7 @@ function ConnectPage() {
         </p>
 
         <div className="space-y-2">
-          {properties.map((prop) => (
+          {properties.map((prop: { propertyId: string; displayName: string; accountName: string }) => (
             <button
               key={prop.propertyId}
               onClick={() => handleSelect(prop)}
