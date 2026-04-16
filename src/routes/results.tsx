@@ -148,7 +148,7 @@ function ResultsPage() {
               AI traffic by source
             </h2>
             <div className="space-y-2">
-              {report.sourceBreakdown.map((s) => (
+              {report.sourceBreakdown.map((s: { source: string; label: string; category: string; sessions: number; users: number }) => (
                 <div
                   key={s.source}
                   className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3"
@@ -178,7 +178,7 @@ function ResultsPage() {
               Top pages getting AI traffic
             </h2>
             <div className="space-y-2">
-              {report.topPages.slice(0, 5).map((p) => (
+              {report.topPages.slice(0, 5).map((p: { path: string; sessions: number }) => (
                 <div
                   key={p.path}
                   className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3"
