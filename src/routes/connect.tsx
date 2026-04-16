@@ -91,7 +91,7 @@ function ConnectPage() {
     );
   }
 
-  const handleSelect = (prop: GA4Property) => {
+  const handleSelect = (prop: { propertyId: string; displayName: string; accountName: string }) => {
     setLoading(prop.propertyId);
     navigate({
       to: "/results",
