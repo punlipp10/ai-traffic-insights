@@ -90,7 +90,7 @@ export const Route = createFileRoute("/results")({
 });
 
 const LOADING_MESSAGES = [
-  "Checking your GA4...",
+  "Checking your Google Analytics...",
   "Looking for AI referral traffic...",
   "Finding top pages...",
   "Crunching the numbers...",
@@ -203,7 +203,9 @@ function ResultsPage() {
         {/* Top bar: breadcrumb + period switcher */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
           <div className="flex items-center gap-3">
-            <img src="/isaisendingmetraffic-logo-small.png" alt="Is AI Sending Me Traffic?" className="h-6 w-auto" />
+            <a href="/" aria-label="Home">
+              <img src="/isaisendingmetraffic-logo-small.png" alt="Is AI Sending Me Traffic?" className="h-6 w-auto hover:opacity-80 transition-opacity" />
+            </a>
             <p
               className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
               style={{ fontFamily: bodyFont }}
@@ -286,8 +288,8 @@ function ResultsPage() {
               style={{ fontFamily: bodyFont }}
             >
               This is likely a partial view. Some AI visits may not be clearly
-              attributed in GA4. AI traffic is probably undercounted because some
-              visits may appear unattributed or grouped elsewhere.
+              attributed in Google Analytics. AI traffic is probably undercounted
+              because some visits may appear unattributed or grouped elsewhere.
             </p>
 
             {/* Footer (desktop only on left) */}
@@ -379,7 +381,20 @@ function ResultsPage() {
               <button
                 onClick={async () => {
                   try {
-                    await navigator.clipboard.writeText(shareText);
+                    if (navigator.clipboard?.writeText) {
+                      await navigator.clipboard.writeText(shareText);
+                    } else {
+                      // Fallback for older iOS Safari
+                      const el = document.createElement("textarea");
+                      el.value = shareText;
+                      el.style.position = "fixed";
+                      el.style.opacity = "0";
+                      document.body.appendChild(el);
+                      el.focus();
+                      el.select();
+                      document.execCommand("copy");
+                      document.body.removeChild(el);
+                    }
                     setCopied("summary");
                     setTimeout(() => setCopied(null), 2000);
                   } catch { /* silent fail */ }
@@ -417,7 +432,7 @@ function ResultsPage() {
                   <span className="text-base leading-none">🔄</span>
                   <div>
                     <p className="font-medium text-sm">Check another property</p>
-                    <p className="text-[11px] text-muted-foreground/60 mt-0.5">Switch to a different GA4 property</p>
+                    <p className="text-[11px] text-muted-foreground/60 mt-0.5">Switch to a different Google Analytics property</p>
                   </div>
                 </div>
               </Link>
