@@ -34,7 +34,7 @@ function PrivacyPage() {
               What we access
             </h2>
             <p>
-              We request read-only access to your Google Analytics 4 data. We
+              We request read-only access to your Google Analytics data. We
               cannot modify your analytics setup, create goals, change filters,
               or do anything other than read your traffic data.
             </p>
@@ -44,11 +44,18 @@ function PrivacyPage() {
             <h2 className="font-semibold text-foreground mb-2">
               What we store
             </h2>
-            <p>
+            <p className="mb-3">
               Your Google access tokens are stored in an encrypted session
-              cookie on your device. We do not store your raw analytics data
-              on our servers. Reports are generated on the fly and shown to
-              you immediately.
+              cookie on your device. You can clear it at any time by clearing
+              your browser cookies.
+            </p>
+            <p>
+              We also save a summary of each scan to our database. This includes
+              your Google account email, the Google Analytics property ID and
+              name, and aggregate numbers from your report — for example total
+              AI sessions, top source, and top page. We do{" "}
+              <strong>not</strong> store your raw analytics data or individual
+              visitor records.
             </p>
           </section>
 
@@ -60,7 +67,7 @@ function PrivacyPage() {
               <li>We do not sell your data</li>
               <li>We do not share your data with third parties</li>
               <li>We do not use your data for advertising</li>
-              <li>We do not store your analytics data long-term</li>
+              <li>We do not store individual visitor records from your analytics</li>
               <li>We do not modify your Google Analytics setup</li>
             </ul>
           </section>
