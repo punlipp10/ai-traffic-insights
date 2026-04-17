@@ -202,12 +202,15 @@ function ResultsPage() {
 
         {/* Top bar: breadcrumb + period switcher */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
-          <p
-            className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
-            style={{ fontFamily: bodyFont }}
-          >
-            {report.propertyName} · Last {periodLabel}
-          </p>
+          <div className="flex items-center gap-3">
+            <img src="/isaisendingmetraffic-logo-small.png" alt="Is AI Sending Me Traffic?" className="h-6 w-auto" />
+            <p
+              className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
+              style={{ fontFamily: bodyFont }}
+            >
+              {report.propertyName} · Last {periodLabel}
+            </p>
+          </div>
 
           {/* Period switcher */}
           <div className="flex items-center gap-1 bg-muted/60 rounded-lg p-0.5 print-hide">

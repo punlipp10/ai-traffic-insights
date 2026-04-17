@@ -12,6 +12,11 @@ function LandingPage() {
     >
       <main className="flex-1 flex flex-col items-center justify-center px-7 py-12 md:py-20">
         <div className="w-full max-w-sm md:max-w-md">
+          {/* Logo */}
+          <div className="flex mb-6 md:justify-center">
+            <img src="/isaisendingmetraffic-logo-small.png" alt="Is AI Sending Me Traffic?" className="h-8 w-auto" />
+          </div>
+
           {/* Eyebrow — line + text + mirror line on desktop */}
           <div className="flex items-center gap-3 mb-5 md:justify-center">
             <div className="h-px bg-primary flex-none" style={{ width: "2rem" }} />

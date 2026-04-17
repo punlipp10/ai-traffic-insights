@@ -74,6 +74,7 @@ gtag('config', '${gaMeasurementId}');`,
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://isaisendingmetraffic.com" },
       { property: "og:site_name", content: "Is AI Sending Me Traffic?" },
+      { property: "og:image", content: "https://isaisendingmetraffic.com/isaisendingmetraffic-logo.png" },
       { name: "twitter:card", content: "summary" },
       {
         name: "twitter:title",
@@ -86,7 +87,7 @@ gtag('config', '${gaMeasurementId}');`,
       },
     ],
     links: [
-      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
