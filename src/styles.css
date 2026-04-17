@@ -12,6 +12,9 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'Figtree', sans-serif;
+  --font-sans: 'Figtree', sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -53,42 +56,45 @@
 
 :root {
   --radius: 0.75rem;
-  --background: oklch(0.99 0.002 90);
-  --foreground: oklch(0.17 0.02 260);
+  /* Warm off-white — quality paper, not pure white */
+  --background: oklch(0.975 0.008 88);
+  --foreground: oklch(0.11 0.025 258);
+  /* Cards pop above the background */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.17 0.02 260);
+  --card-foreground: oklch(0.11 0.025 258);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.17 0.02 260);
-  --primary: oklch(0.55 0.14 168);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.96 0.01 260);
-  --secondary-foreground: oklch(0.25 0.02 260);
-  --muted: oklch(0.96 0.005 260);
-  --muted-foreground: oklch(0.50 0.02 260);
-  --accent: oklch(0.96 0.01 260);
-  --accent-foreground: oklch(0.25 0.02 260);
-  --destructive: oklch(0.58 0.22 27);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.92 0.005 260);
-  --input: oklch(0.92 0.005 260);
-  --ring: oklch(0.55 0.14 168);
-  --success: oklch(0.55 0.14 168);
-  --success-foreground: oklch(1 0 0);
-  --warning: oklch(0.75 0.15 75);
-  --warning-foreground: oklch(0.25 0.02 260);
-  --chart-1: oklch(0.55 0.14 168);
-  --chart-2: oklch(0.60 0.12 230);
-  --chart-3: oklch(0.65 0.10 300);
-  --chart-4: oklch(0.75 0.15 75);
-  --chart-5: oklch(0.70 0.18 40);
-  --sidebar: oklch(0.98 0.002 260);
-  --sidebar-foreground: oklch(0.17 0.02 260);
-  --sidebar-primary: oklch(0.55 0.14 168);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.96 0.01 260);
-  --sidebar-accent-foreground: oklch(0.25 0.02 260);
-  --sidebar-border: oklch(0.92 0.005 260);
-  --sidebar-ring: oklch(0.55 0.14 168);
+  --popover-foreground: oklch(0.11 0.025 258);
+  /* Verdant teal — the affirmative "yes" color */
+  --primary: oklch(0.50 0.175 162);
+  --primary-foreground: oklch(0.99 0.002 90);
+  --secondary: oklch(0.94 0.007 88);
+  --secondary-foreground: oklch(0.30 0.02 258);
+  --muted: oklch(0.93 0.007 88);
+  --muted-foreground: oklch(0.50 0.018 258);
+  --accent: oklch(0.93 0.007 88);
+  --accent-foreground: oklch(0.25 0.02 258);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.88 0.009 88);
+  --input: oklch(0.88 0.009 88);
+  --ring: oklch(0.50 0.175 162);
+  --success: oklch(0.50 0.175 162);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.72 0.155 75);
+  --warning-foreground: oklch(0.22 0.02 258);
+  --chart-1: oklch(0.50 0.175 162);
+  --chart-2: oklch(0.58 0.14 230);
+  --chart-3: oklch(0.62 0.10 300);
+  --chart-4: oklch(0.72 0.155 75);
+  --chart-5: oklch(0.68 0.18 40);
+  --sidebar: oklch(0.97 0.005 88);
+  --sidebar-foreground: oklch(0.11 0.025 258);
+  --sidebar-primary: oklch(0.50 0.175 162);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.93 0.007 88);
+  --sidebar-accent-foreground: oklch(0.25 0.02 258);
+  --sidebar-border: oklch(0.88 0.009 88);
+  --sidebar-ring: oklch(0.50 0.175 162);
 }
 
 @layer base {
@@ -99,8 +105,83 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: 'Figtree', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Entrance animations for results page */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.35s ease both;
+}
+
+.animate-delay-100 { animation-delay: 0.1s; }
+.animate-delay-200 { animation-delay: 0.2s; }
+.animate-delay-300 { animation-delay: 0.3s; }
+.animate-delay-400 { animation-delay: 0.4s; }
+.animate-delay-500 { animation-delay: 0.5s; }
+.animate-delay-600 { animation-delay: 0.6s; }
+
+@media print {
+  nav,
+  button,
+  a[href]:not(.print-show),
+  .print-hide {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+    color: #111;
+    font-size: 12pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .max-w-lg {
+    max-width: 100%;
+    padding: 0 1cm;
+  }
+
+  .rounded-2xl,
+  .rounded-xl {
+    border: 1px solid #e5e7eb;
+    page-break-inside: avoid;
+  }
+
+  section:last-of-type {
+    display: none;
+  }
+
+  .print-footer::before {
+    content: "Generated by IsAISendingMeTraffic.com — lovedbyai.com";
+    display: block;
+    font-size: 9pt;
+    color: #888;
+    text-align: center;
+    margin-top: 1cm;
+    padding-top: 0.5cm;
+    border-top: 1px solid #e5e7eb;
   }
 }
