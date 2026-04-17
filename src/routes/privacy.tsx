@@ -102,14 +102,14 @@ function PrivacyPage() {
           </section>
         </div>
 
-        <footer className="mt-16 pt-6 border-t border-border">
+        <footer className="mt-16 pt-6 border-t border-border text-center">
           <p className="text-xs text-muted-foreground/60">
-            With ❤️ by{" "}
+            With <span className="text-blue-500">♥</span> by{"\ "}
             <a
-              href="https://lovedbyai.com"
+              href="https://www.lovedbyai.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-muted-foreground transition-colors"
+              className="text-blue-500 hover:text-blue-600 transition-colors font-medium"
             >
               lovedbyai
             </a>

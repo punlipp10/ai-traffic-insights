@@ -4,6 +4,9 @@ import { listGA4Properties } from "@/lib/ga4.functions";
 import { logoutGoogle } from "@/lib/auth.functions";
 import type { GA4Property } from "@/lib/ai-sources";
 
+const displayFont = "'Barlow Condensed', sans-serif";
+const bodyFont = "'Figtree', sans-serif";
+
 export const Route = createFileRoute("/connect")({
   head: () => ({
     meta: [
@@ -15,8 +18,16 @@ export const Route = createFileRoute("/connect")({
     try {
       const result = await listGA4Properties();
       return { properties: result.properties, error: null };
-    } catch (e) {
-      return { properties: [] as GA4Property[], error: "not_authenticated" };
+    } catch (e: unknown) {
+      const msg = (e as Error).message || "";
+      const isAuthError =
+        msg.includes("Not authenticated") ||
+        msg.includes("No refresh token") ||
+        msg.toLowerCase().includes("not authenticated");
+      return {
+        properties: [] as GA4Property[],
+        error: isAuthError ? "not_authenticated" : `api_error: ${msg}`,
+      };
     }
   },
   component: ConnectPage,
@@ -25,20 +36,62 @@ export const Route = createFileRoute("/connect")({
 function ConnectPage() {
   const { properties, error } = Route.useLoaderData();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState<string | null>(null);
+  const [disconnecting, setDisconnecting] = useState(false);
+
+  const handleDisconnect = async () => {
+    setDisconnecting(true);
+    try {
+      await logoutGoogle();
+    } catch {
+      // best-effort
+    }
+    navigate({ to: "/" });
+  };
 
   if (error === "not_authenticated") {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-6">
-        <div className="text-center space-y-4">
-          <p className="text-muted-foreground">
+        <div className="text-center space-y-4 max-w-xs">
+          <p
+            className="text-muted-foreground text-sm"
+            style={{ fontFamily: bodyFont }}
+          >
             You need to connect your Google account first.
           </p>
           <a
             href="/auth/google"
-            className="inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
+            style={{ fontFamily: bodyFont }}
           >
             Connect GA4
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+        <div className="text-center space-y-4 max-w-sm">
+          <h1
+            className="text-3xl tracking-tight text-foreground"
+            style={{ fontFamily: displayFont }}
+          >
+            Something went wrong
+          </h1>
+          <p
+            className="text-sm text-muted-foreground font-mono bg-muted rounded-lg px-3 py-2 text-left"
+            style={{ fontFamily: "monospace" }}
+          >
+            {error}
+          </p>
+          <a
+            href="/auth/google"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
+            style={{ fontFamily: bodyFont }}
+          >
+            Try again
           </a>
         </div>
       </div>
@@ -48,24 +101,32 @@ function ConnectPage() {
   if (properties.length === 0) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-6">
-        <div className="text-center space-y-4 max-w-sm">
-          <h1 className="text-xl font-bold text-foreground">
+        <div className="text-center space-y-4 max-w-xs">
+          <h1
+            className="text-3xl tracking-tight text-foreground"
+            style={{ fontFamily: displayFont }}
+          >
             No GA4 properties found
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p
+            className="text-sm text-muted-foreground"
+            style={{ fontFamily: bodyFont }}
+          >
             We couldn't find any GA4 properties on your Google account. Make
             sure you have access to at least one GA4 property.
           </p>
-          <div className="flex gap-3 justify-center">
+          <div className="flex gap-3 justify-center pt-2">
             <a
               href="/auth/google"
-              className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+              className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+              style={{ fontFamily: bodyFont }}
             >
               Try again
             </a>
             <Link
               to="/"
-              className="rounded-xl bg-secondary px-5 py-2.5 text-sm font-semibold text-secondary-foreground"
+              className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-muted-foreground"
+              style={{ fontFamily: bodyFont }}
             >
               Go back
             </Link>
@@ -76,74 +137,97 @@ function ConnectPage() {
   }
 
   // If only one property, go straight to results
-  if (properties.length === 1) {
-    const prop = properties[0];
-    navigate({
-      to: "/results",
-      search: { propertyId: prop.propertyId, propertyName: prop.displayName },
-    });
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground animate-pulse">
-          Checking your GA4...
-        </p>
-      </div>
-    );
-  }
-
-  const handleSelect = (prop: { propertyId: string; displayName: string; accountName: string }) => {
-    setLoading(prop.propertyId);
-    navigate({
-      to: "/results",
-      search: { propertyId: prop.propertyId, propertyName: prop.displayName },
-    });
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-lg mx-auto px-6 py-12">
-        <h1 className="text-2xl font-bold text-foreground mb-2">
-          Select a property
-        </h1>
-        <p className="text-sm text-muted-foreground mb-8">
-          Choose which GA4 property you want to check for AI traffic.
-        </p>
+      <div className="max-w-2xl mx-auto px-5 py-10 md:px-10 md:py-16">
 
-        <div className="space-y-2">
-          {properties.map((prop: { propertyId: string; displayName: string; accountName: string }) => (
-            <button
-              key={prop.propertyId}
-              onClick={() => handleSelect(prop)}
-              disabled={loading !== null}
-              className="w-full text-left rounded-xl border border-border bg-card p-4 hover:border-primary/40 hover:shadow-sm transition-all disabled:opacity-50"
+        {/* Header */}
+        <div className="flex items-start justify-between mb-8 animate-fade-up">
+          <div>
+            <p
+              className="text-[11px] tracking-widest uppercase text-muted-foreground/60 mb-2"
+              style={{ fontFamily: bodyFont }}
             >
-              <p className="font-medium text-card-foreground">
-                {prop.displayName}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {prop.accountName} · {prop.propertyId}
-              </p>
-              {loading === prop.propertyId && (
-                <p className="text-xs text-primary mt-2 animate-pulse">
-                  Loading...
-                </p>
-              )}
-            </button>
-          ))}
+              Step 2 of 2
+            </p>
+            <h1
+              className="text-[2rem] leading-[1.05] tracking-tight text-foreground"
+              style={{ fontFamily: displayFont }}
+            >
+              Select a property
+            </h1>
+            <p
+              className="text-sm text-muted-foreground mt-1.5"
+              style={{ fontFamily: bodyFont }}
+            >
+              Choose which GA4 property to check for AI traffic.
+            </p>
+          </div>
+          <button
+            onClick={handleDisconnect}
+            disabled={disconnecting}
+            className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors whitespace-nowrap ml-4 mt-1 disabled:opacity-40"
+            style={{ fontFamily: bodyFont }}
+          >
+            {disconnecting ? "Disconnecting…" : "Disconnect"}
+          </button>
         </div>
 
-        <footer className="mt-16 text-center">
-          <p className="text-xs text-muted-foreground/60">
-            With ❤️ by{" "}
+        {/* Property list */}
+        <div className="rounded-xl border border-border bg-card overflow-hidden animate-fade-up animate-delay-100">
+          {properties.map(
+            (prop: {
+              propertyId: string;
+              displayName: string;
+              accountName: string;
+            }, idx: number) => (
+              <Link
+                key={prop.propertyId}
+                to="/results"
+                search={{ propertyId: prop.propertyId, propertyName: prop.displayName }}
+                className={`block w-full text-left px-5 py-4 hover:bg-muted/40 active:bg-muted/70 transition-colors ${
+                  idx < properties.length - 1 ? "border-b border-border/50" : ""
+                }`}
+              >
+                <p
+                  className="font-semibold text-foreground text-sm"
+                  style={{ fontFamily: bodyFont }}
+                >
+                  {prop.displayName}
+                </p>
+                <p
+                  className="text-[11px] text-muted-foreground/70 mt-0.5"
+                  style={{ fontFamily: bodyFont }}
+                >
+                  {prop.accountName} · {prop.propertyId}
+                </p>
+              </Link>
+            )
+          )}
+        </div>
+
+        <footer className="mt-16 text-center space-y-1">
+          <p
+            className="text-[11px] text-muted-foreground/40"
+            style={{ fontFamily: bodyFont }}
+          >
+          With <span className="text-blue-500">♥</span> by{"\ "}
             <a
-              href="https://lovedbyai.com"
+              href="https://www.lovedbyai.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline"
+              className="text-blue-500 hover:text-blue-600 transition-colors font-medium"
             >
               lovedbyai
             </a>
           </p>
+          <Link
+            to="/privacy"
+            className="block text-[11px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
+            style={{ fontFamily: bodyFont }}
+          >
+            Privacy
+          </Link>
         </footer>
       </div>
     </div>

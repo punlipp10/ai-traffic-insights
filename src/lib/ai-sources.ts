@@ -55,7 +55,9 @@ export function getAllAISourcePatterns(): string[] {
 }
 
 export interface AITrafficReport {
+  propertyId: string;
   propertyName: string;
+  days: number;
   dateRange: { start: string; end: string };
   prevDateRange: { start: string; end: string };
   totalAISessions: number;

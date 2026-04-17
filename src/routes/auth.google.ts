@@ -20,7 +20,7 @@ export const Route = createFileRoute("/auth/google")({
         authUrl.searchParams.set("response_type", "code");
         authUrl.searchParams.set(
           "scope",
-          "https://www.googleapis.com/auth/analytics.readonly"
+          "openid email https://www.googleapis.com/auth/analytics.readonly"
         );
         authUrl.searchParams.set("access_type", "offline");
         authUrl.searchParams.set("prompt", "consent");

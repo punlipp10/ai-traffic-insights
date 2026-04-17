@@ -73,7 +73,12 @@ export const listGA4Properties = createServerFn({ method: "GET" }).handler(
     if (!response.ok) {
       const err = await response.text();
       console.error("GA4 accountSummaries error:", err);
-      throw new Error("Failed to fetch GA4 properties");
+      let detail = err;
+      try {
+        const parsed = JSON.parse(err);
+        detail = parsed?.error?.message || err;
+      } catch {}
+      throw new Error(`GA4 API error (${response.status}): ${detail}`);
     }
 
     const data = await response.json();
@@ -95,27 +100,28 @@ export const listGA4Properties = createServerFn({ method: "GET" }).handler(
 
 export const fetchAITrafficReport = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: { propertyId: string; propertyName?: string }) => input
+    (input: { propertyId: string; propertyName?: string; days?: number }) => input
   )
   .handler(async ({ data }) => {
     const accessToken = await getAccessToken();
     const propertyId = data.propertyId;
+    const days = data.days || 30;
 
     const today = new Date();
-    const thirtyDaysAgo = new Date(today);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const sixtyDaysAgo = new Date(today);
-    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-    const thirtyOneDaysAgo = new Date(today);
-    thirtyOneDaysAgo.setDate(thirtyOneDaysAgo.getDate() - 31);
+    const periodStart = new Date(today);
+    periodStart.setDate(periodStart.getDate() - days);
+    const prevPeriodEnd = new Date(periodStart);
+    prevPeriodEnd.setDate(prevPeriodEnd.getDate() - 1);
+    const prevPeriodStart = new Date(prevPeriodEnd);
+    prevPeriodStart.setDate(prevPeriodStart.getDate() - days);
 
     const fmt = (d: Date) => d.toISOString().split("T")[0];
 
-    // Report 1: All traffic by source (last 30 + prev 30)
+    // Report 1: All traffic by source (current period + prev period)
     const sourceReport = await runGA4Report(accessToken, propertyId, {
       dateRanges: [
-        { startDate: fmt(thirtyDaysAgo), endDate: fmt(today) },
-        { startDate: fmt(sixtyDaysAgo), endDate: fmt(thirtyOneDaysAgo) },
+        { startDate: fmt(periodStart), endDate: fmt(today) },
+        { startDate: fmt(prevPeriodStart), endDate: fmt(prevPeriodEnd) },
       ],
       dimensions: [{ name: "sessionSource" }],
       metrics: [
@@ -197,7 +203,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
       // Report 2: Daily trend for AI sources
       const trendReport = await runGA4Report(accessToken, propertyId, {
         dateRanges: [
-          { startDate: fmt(thirtyDaysAgo), endDate: fmt(today) },
+          { startDate: fmt(periodStart), endDate: fmt(today) },
         ],
         dimensions: [{ name: "date" }],
         metrics: [{ name: "sessions" }],
@@ -208,7 +214,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
           },
         },
         orderBys: [{ dimension: { dimensionName: "date" }, desc: false }],
-        limit: "31",
+        limit: String(days + 1),
       });
 
       dailyTrend = (trendReport.rows || []).map(
@@ -218,54 +224,86 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
         })
       );
 
-      // Report 3: Top landing pages for AI sources
+      // Report 3: Top landing pages for AI sources (filter out (not set))
       const pagesReport = await runGA4Report(accessToken, propertyId, {
         dateRanges: [
-          { startDate: fmt(thirtyDaysAgo), endDate: fmt(today) },
+          { startDate: fmt(periodStart), endDate: fmt(today) },
         ],
         dimensions: [{ name: "landingPagePlusQueryString" }],
         metrics: [{ name: "sessions" }],
         dimensionFilter: {
-          filter: {
-            fieldName: "sessionSource",
-            inListFilter: { values: aiSourceValues },
+          andGroup: {
+            expressions: [
+              {
+                filter: {
+                  fieldName: "sessionSource",
+                  inListFilter: { values: aiSourceValues },
+                },
+              },
+              {
+                notExpression: {
+                  filter: {
+                    fieldName: "landingPagePlusQueryString",
+                    stringFilter: { value: "(not set)", matchType: "EXACT" },
+                  },
+                },
+              },
+            ],
           },
         },
         orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
         limit: "10",
       });
 
-      topPages = (pagesReport.rows || []).map(
-        (row: { dimensionValues?: Array<{ value?: string }>; metricValues?: Array<{ value?: string }> }) => ({
-          path: row.dimensionValues?.[0]?.value || "",
-          sessions: parseInt(row.metricValues?.[0]?.value || "0"),
-        })
-      );
+      topPages = (pagesReport.rows || [])
+        .map(
+          (row: { dimensionValues?: Array<{ value?: string }>; metricValues?: Array<{ value?: string }> }) => ({
+            path: row.dimensionValues?.[0]?.value || "",
+            sessions: parseInt(row.metricValues?.[0]?.value || "0"),
+          })
+        )
+        .filter((p: { path: string; sessions: number }) => p.path && p.path !== "(not set)");
     }
 
     // Get top organic pages (for zero-data state)
     const organicReport = await runGA4Report(accessToken, propertyId, {
       dateRanges: [
-        { startDate: fmt(thirtyDaysAgo), endDate: fmt(today) },
+        { startDate: fmt(periodStart), endDate: fmt(today) },
       ],
       dimensions: [{ name: "landingPagePlusQueryString" }],
       metrics: [{ name: "sessions" }],
       dimensionFilter: {
-        filter: {
-          fieldName: "sessionDefaultChannelGroup",
-          stringFilter: { value: "Organic Search", matchType: "EXACT" },
+        andGroup: {
+          expressions: [
+            {
+              filter: {
+                fieldName: "sessionDefaultChannelGroup",
+                stringFilter: { value: "Organic Search", matchType: "EXACT" },
+              },
+            },
+            {
+              notExpression: {
+                filter: {
+                  fieldName: "landingPagePlusQueryString",
+                  stringFilter: { value: "(not set)", matchType: "EXACT" },
+                },
+              },
+            },
+          ],
         },
       },
       orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
       limit: "5",
     });
 
-    const topOrganicPages = (organicReport.rows || []).map(
-      (row: { dimensionValues?: Array<{ value?: string }>; metricValues?: Array<{ value?: string }> }) => ({
-        path: row.dimensionValues?.[0]?.value || "",
-        sessions: parseInt(row.metricValues?.[0]?.value || "0"),
-      })
-    );
+    const topOrganicPages = (organicReport.rows || [])
+      .map(
+        (row: { dimensionValues?: Array<{ value?: string }>; metricValues?: Array<{ value?: string }> }) => ({
+          path: row.dimensionValues?.[0]?.value || "",
+          sessions: parseInt(row.metricValues?.[0]?.value || "0"),
+        })
+      )
+      .filter((p: { path: string; sessions: number }) => p.path && p.path !== "(not set)");
 
     // Calculate totals
     let totalAISessions = 0;
@@ -316,11 +354,13 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
     else if (totalAISessions > 0) state = "low";
 
     const report: AITrafficReport = {
+      propertyId,
       propertyName: data.propertyName || propertyId,
-      dateRange: { start: fmt(thirtyDaysAgo), end: fmt(today) },
+      days,
+      dateRange: { start: fmt(periodStart), end: fmt(today) },
       prevDateRange: {
-        start: fmt(sixtyDaysAgo),
-        end: fmt(thirtyOneDaysAgo),
+        start: fmt(prevPeriodStart),
+        end: fmt(prevPeriodEnd),
       },
       totalAISessions,
       prevAISessions,
@@ -360,7 +400,12 @@ async function runGA4Report(
   if (!response.ok) {
     const err = await response.text();
     console.error("GA4 runReport error:", response.status, err);
-    throw new Error(`GA4 report failed (${response.status})`);
+    let detail = err;
+    try {
+      const parsed = JSON.parse(err);
+      detail = parsed?.error?.message || err;
+    } catch {}
+    throw new Error(`GA4 report error (${response.status}): ${detail}`);
   }
 
   return response.json();

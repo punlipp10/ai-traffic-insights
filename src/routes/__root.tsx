@@ -33,8 +33,30 @@ function NotFoundComponent() {
 }
 
 export const Route = createRootRoute({
-  head: () => ({
-    meta: [
+  head: () => {
+    const gaMeasurementId = import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined;
+    const gaScripts = gaMeasurementId && !gaMeasurementId.startsWith("G-XXXX")
+      ? [
+          {
+            tag: "script" as const,
+            attrs: {
+              async: true,
+              src: `https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`,
+            },
+          },
+          {
+            tag: "script" as const,
+            children: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${gaMeasurementId}');`,
+          },
+        ]
+      : [];
+
+    return {
+      scripts: gaScripts,
+      meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Is AI Sending Me Traffic?" },
@@ -50,6 +72,8 @@ export const Route = createRootRoute({
           "Connect your GA4 and instantly see if AI tools are sending you traffic.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://isaisendingmetraffic.com" },
+      { property: "og:site_name", content: "Is AI Sending Me Traffic?" },
       { name: "twitter:card", content: "summary" },
       {
         name: "twitter:title",
@@ -62,12 +86,20 @@ export const Route = createRootRoute({
       },
     ],
     links: [
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,
       },
     ],
-  }),
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,

@@ -57,6 +57,9 @@ export const exchangeGoogleCode = createServerFn({ method: "POST" })
       throw new Error("Google OAuth is not configured");
     }
 
+    // Use the origin passed from the client (same origin the OAuth flow started from)
+    const origin = data.origin;
+
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -64,7 +67,7 @@ export const exchangeGoogleCode = createServerFn({ method: "POST" })
         code: data.code,
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: `${data.origin}/auth/callback`,
+        redirect_uri: `${origin}/auth/callback`,
         grant_type: "authorization_code",
       }),
     });
