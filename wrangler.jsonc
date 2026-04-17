@@ -1,7 +1,10 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "isaisendingmetraffic",
-  "compatibility_date": "2025-09-24",
-  "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry",
+  "main": "dist/server/server.js",
+  "assets": {
+    "directory": "dist/client"
+  },
+  "compatibility_date": "2026-04-17",
+  "compatibility_flags": ["nodejs_compat"]
 }
