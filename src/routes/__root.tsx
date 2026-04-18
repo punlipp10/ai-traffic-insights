@@ -34,25 +34,6 @@ function NotFoundComponent() {
 
 export const Route = createRootRoute({
   head: () => {
-    const gaMeasurementId = import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined;
-    const gaScripts = gaMeasurementId && !gaMeasurementId.startsWith("G-XXXX")
-      ? [
-          {
-            tag: "script" as const,
-            attrs: {
-              async: true,
-              src: `https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`,
-            },
-          },
-          {
-            tag: "script" as const,
-            children: `window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', '${gaMeasurementId}');`,
-          },
-        ]
-      : [];
 
     // JSON-LD structured data
     const organizationSchema = {
@@ -174,7 +155,7 @@ gtag('config', '${gaMeasurementId}');`,
     ];
 
     return {
-      scripts: [...gaScripts, ...schemaScripts],
+      scripts: [...schemaScripts],
       meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
@@ -240,15 +221,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
-        {/* Google Tag Manager */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-TD8TWLHK');` }} />
-        {/* End Google Tag Manager */}
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-FN2B9XNHVL" />
+        <script dangerouslySetInnerHTML={{ __html: `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-FN2B9XNHVL');` }} />
         <HeadContent />
       </head>
       <body>
-        {/* Google Tag Manager (noscript) */}
-        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TD8TWLHK" height="0" width="0" style={{ display: "none", visibility: "hidden" }}></iframe></noscript>
-        {/* End Google Tag Manager (noscript) */}
         {children}
         <Scripts />
       </body>
