@@ -197,10 +197,9 @@ function ConnectPage() {
               displayName: string;
               accountName: string;
             }, idx: number) => (
-              <Link
+              <a
                 key={prop.propertyId}
-                to="/results"
-                search={{ propertyId: prop.propertyId, propertyName: prop.displayName }}
+                href={`/results?propertyId=${encodeURIComponent(prop.propertyId)}&propertyName=${encodeURIComponent(prop.displayName)}&days=30`}
                 onClick={() => setLoadingProperty(prop.propertyId)}
                 className={`block w-full text-left px-5 py-4 hover:bg-muted/40 active:bg-muted/70 transition-colors ${
                   idx < properties.length - 1 ? "border-b border-border/50" : ""
@@ -223,7 +222,7 @@ function ConnectPage() {
                   </div>
                   {loadingProperty === prop.propertyId && <BouncingDots />}
                 </div>
-              </Link>
+              </a>
             )
           )}
         </div>
