@@ -1,6 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Is AI Sending Me Traffic? — Free AI Traffic Checker" },
+      {
+        name: "description",
+        content:
+          "Free AI traffic checker — connect your Google Analytics and instantly see if ChatGPT, Perplexity, Claude, Gemini, and other AI tools are sending visitors to your website.",
+      },
+    ],
+    links: [
+      { rel: "canonical", href: "https://isaisendingmetraffic.com/" },
+    ],
+  }),
   component: LandingPage,
 });
 
@@ -11,27 +24,19 @@ function LandingPage() {
       style={{ minHeight: "100dvh" }}
     >
       <main className="flex-1 flex flex-col justify-center px-7 py-8">
-        <div className="w-full max-w-sm mx-auto md:max-w-5xl md:grid md:grid-cols-2 md:gap-20 md:items-center">
+        <article className="w-full max-w-md mx-auto text-center">
 
-          {/* Left: content */}
-          <div>
-            {/* Small logo */}
-            <div className="mb-5">
-              <img
-                src="/isaisendingmetraffic-logo-small.png"
-                alt="Is AI Sending Me Traffic?"
-                className="h-7 w-auto"
-              />
-            </div>
+          {/* Editorial rule */}
+          <div className="w-10 h-[3px] bg-primary mb-6 mx-auto" aria-hidden="true" />
 
             {/* H1 */}
             <h1
-              className="font-bold uppercase text-foreground mb-5"
+              className="font-bold uppercase text-foreground mb-4"
               style={{
                 fontFamily: "'Barlow Condensed', sans-serif",
-                fontSize: "clamp(3.2rem, 13vw, 5.75rem)",
-                lineHeight: 0.92,
-                letterSpacing: "-0.01em",
+                fontSize: "clamp(3.4rem, 14vw, 6rem)",
+                lineHeight: 0.9,
+                letterSpacing: "-0.02em",
               }}
             >
               IS AI
@@ -43,25 +48,40 @@ function LandingPage() {
 
             {/* Subtitle */}
             <p
-              className="text-muted-foreground mb-4 leading-relaxed"
-              style={{ fontSize: "0.9375rem", fontFamily: "'Figtree', sans-serif" }}
+              className="text-muted-foreground mb-5 leading-relaxed mx-auto"
+              style={{ fontSize: "1rem", fontFamily: "'Figtree', sans-serif", maxWidth: "30ch" }}
             >
-              Connect your Google Analytics and see whether ChatGPT, Perplexity,
-              Claude and other AI tools are already sending visitors to your site.
+              Connect your Google Analytics. See if ChatGPT, Perplexity, Claude
+              and others are already sending visitors.
             </p>
 
-            {/* AI sources text list */}
-            <p
-              className="text-[11px] text-muted-foreground/50 mb-7 tracking-wide"
-              style={{ fontFamily: "'Figtree', sans-serif" }}
-            >
-              ChatGPT · Perplexity · Claude · Gemini · Copilot · and more
-            </p>
+            {/* AI source logos */}
+            <div className="flex items-center justify-center gap-4 mb-8" role="img" aria-label="Supported AI tools: ChatGPT, Perplexity, Claude, Gemini, Grok, DeepSeek">
+              {[
+                { name: "ChatGPT", src: "/llm-logos/chatgpt.png" },
+                { name: "Perplexity", src: "/llm-logos/perplexity.png" },
+                { name: "Claude", src: "/llm-logos/claude.png" },
+                { name: "Gemini", src: "/llm-logos/gemini.png" },
+                { name: "Grok", src: "/llm-logos/grok.png" },
+                { name: "DeepSeek", src: "/llm-logos/deepseek.png" },
+              ].map((ai) => (
+                <img
+                  key={ai.name}
+                  src={ai.src}
+                  alt={`${ai.name} logo`}
+                  title={ai.name}
+                  width={28}
+                  height={28}
+                  loading="eager"
+                  className="w-7 h-7 rounded object-contain grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-200"
+                />
+              ))}
+            </div>
 
             {/* CTA */}
             <a
               href="/auth/google"
-              className="flex items-center justify-center gap-2.5 w-full bg-primary text-primary-foreground font-semibold text-base rounded-xl transition-all hover:opacity-90 active:scale-[0.98]"
+              className="flex items-center justify-center gap-2.5 w-full max-w-sm mx-auto bg-primary text-primary-foreground font-semibold text-base rounded-xl transition-all hover:opacity-90 active:scale-[0.98]"
               style={{ paddingTop: "1rem", paddingBottom: "1rem", fontFamily: "'Figtree', sans-serif" }}
             >
               <GoogleIcon />
@@ -80,43 +100,33 @@ function LandingPage() {
             <p className="text-center mt-3 text-xs text-muted-foreground/60 leading-relaxed" style={{ fontFamily: "'Figtree', sans-serif" }}>
               Read-only access. We do not change your analytics setup.
             </p>
-          </div>
 
-          {/* Right: big logo (desktop only) */}
-          <div className="hidden md:flex items-center justify-center">
-            <img
-              src="/isaisendingmetraffic-logo.png"
-              alt=""
-              aria-hidden="true"
-              className="w-full max-w-xs lg:max-w-sm object-contain"
-            />
-          </div>
-
-        </div>
+        </article>
       </main>
 
       {/* Footer */}
       <footer className="px-7 pb-6 flex flex-col items-center gap-1.5">
-        <p className="text-xs text-muted-foreground/50" style={{ fontFamily: "'Figtree', sans-serif" }}>
-          With{" "}
-          <span className="text-blue-500">♥</span>
-          {" "}by{" "}
-          <a
-            href="https://www.lovedbyai.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 hover:text-blue-600 transition-colors font-medium"
+          <p className="text-xs text-muted-foreground/50" style={{ fontFamily: "'Figtree', sans-serif" }}>
+            With{" "}
+            <span className="text-blue-500" aria-hidden="true">♥</span>
+            <span className="sr-only">love</span>
+            {" "}by{" "}
+            <a
+              href="https://www.lovedby.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-600 transition-colors font-medium"
+            >
+              lovedby.ai
+            </a>
+          </p>
+          <Link
+            to="/privacy"
+            className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            style={{ fontFamily: "'Figtree', sans-serif" }}
           >
-            lovedbyai
-          </a>
-        </p>
-        <Link
-          to="/privacy"
-          className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-          style={{ fontFamily: "'Figtree', sans-serif" }}
-        >
-          Privacy
-        </Link>
+            Privacy
+          </Link>
       </footer>
     </div>
   );

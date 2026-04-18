@@ -3,11 +3,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy — Is AI Sending Me Traffic?" },
+      { title: "Privacy Policy — Is AI Sending Me Traffic?" },
       {
         name: "description",
-        content: "How we handle your data. Short version: we barely touch it.",
+        content: "Privacy policy for IsAISendingMeTraffic.com. Read-only Google Analytics access, encrypted session cookies, no data selling.",
       },
+    ],
+    links: [
+      { rel: "canonical", href: "https://isaisendingmetraffic.com/privacy" },
     ],
   }),
   component: PrivacyPage,
@@ -97,12 +100,10 @@ function PrivacyPage() {
             <p>
               Questions? Reach out at{" "}
               <a
-                href="https://lovedbyai.com"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="mailto:info@lovedby.ai"
                 className="underline hover:text-foreground"
               >
-                lovedbyai.com
+                info@lovedby.ai
               </a>
               .
             </p>
@@ -113,12 +114,12 @@ function PrivacyPage() {
           <p className="text-xs text-muted-foreground/60">
             With <span className="text-blue-500">♥</span> by{"\ "}
             <a
-              href="https://www.lovedbyai.com"
+              href="https://www.lovedby.ai"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-500 hover:text-blue-600 transition-colors font-medium"
             >
-              lovedbyai
+              lovedby.ai
             </a>
           </p>
         </footer>

@@ -11,7 +11,8 @@ export const Route = createFileRoute("/connect")({
   head: () => ({
     meta: [
       { title: "Select Property — Is AI Sending Me Traffic?" },
-      { name: "description", content: "Choose which GA4 property to analyze." },
+      { name: "description", content: "Choose which GA4 property to analyze for AI referral traffic." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   loader: async () => {
@@ -63,7 +64,7 @@ function ConnectPage() {
             className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
             style={{ fontFamily: bodyFont }}
           >
-            Connect GA4
+            Connect Google Analytics
           </a>
         </div>
       </div>
@@ -213,12 +214,12 @@ function ConnectPage() {
           >
           With <span className="text-blue-500">♥</span> by{"\ "}
             <a
-              href="https://www.lovedbyai.com"
+              href="https://www.lovedby.ai"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-500 hover:text-blue-600 transition-colors font-medium"
             >
-              lovedbyai
+              lovedby.ai
             </a>
           </p>
           <Link
