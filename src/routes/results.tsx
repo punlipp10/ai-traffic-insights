@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { fetchAITrafficReport } from "@/lib/ga4.functions";
 import { saveScan } from "@/lib/tracking.functions";
@@ -14,36 +14,15 @@ const PERIOD_OPTIONS = [
   { label: "12m", days: 365 },
 ];
 
-// Minimal inline SVG icons for top AI sources
-const AI_LOGOS: Record<string, React.ReactNode> = {
-  ChatGPT: (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="ChatGPT">
-      <path d="M22.282 9.821a5.987 5.987 0 00-.516-4.91 6.046 6.046 0 00-6.51-2.9A6.065 6.065 0 004.981 4.18a5.987 5.987 0 00-3.998 2.9 6.046 6.046 0 00.743 7.097 5.98 5.98 0 00.51 4.911 6.051 6.051 0 006.515 2.9A5.985 5.985 0 0013.26 24a6.056 6.056 0 005.772-4.206 5.99 5.99 0 003.997-2.9 6.056 6.056 0 00-.747-7.073zM13.26 22.43a4.476 4.476 0 01-2.876-1.04c.11-.065.31-.175.45-.258l4.763-2.758a.795.795 0 00.4-.692v-6.73l2.01 1.162a.07.07 0 01.04.054v5.574A4.49 4.49 0 0113.26 22.43zm-9.606-4.124a4.47 4.47 0 01-.535-3.014c.1.06.27.133.386.193l4.763 2.758a.795.795 0 00.796 0l5.82-3.369v2.323a.073.073 0 01-.03.064L9.682 21.38a4.49 4.49 0 01-6.028-3.074zm-1.24-10.33a4.47 4.47 0 012.322-1.968V11.7a.77.77 0 00.392.67l5.811 3.36-2.01 1.16a.073.073 0 01-.071.01L3.63 13.975a4.49 4.49 0 01-1.216-5.99zm16.51 3.868l-5.82-3.368 2.01-1.16a.073.073 0 01.071-.01l5.165 2.926a4.49 4.49 0 01-.695 8.114V12.78a.79.79 0 00-.73-.61zm2.001-3.014a7.27 7.27 0 00-.386-.193l-4.764-2.758a.795.795 0 00-.795 0L9.18 9.408V7.085a.073.073 0 01.029-.064l5.165-2.922a4.49 4.49 0 016.67 4.644zm-12.61 4.125l-2.01-1.162a.07.07 0 01-.04-.054V6.167a4.49 4.49 0 017.368-3.445c-.11.065-.31.175-.45.258L7.46 5.737a.795.795 0 00-.4.692zm1.092-2.354l2.592-1.496 2.593 1.496v2.99L12 16.87l-2.593-1.498z" fill="currentColor"/>
-    </svg>
-  ),
-  Perplexity: (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Perplexity">
-      <path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
-  Claude: (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Claude">
-      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M8 12c0-2.21 1.79-4 4-4s4 1.79 4 4-1.79 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <circle cx="12" cy="12" r="2" fill="currentColor"/>
-    </svg>
-  ),
-  Gemini: (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Gemini">
-      <path d="M12 2C12 2 12 12 2 12C12 12 12 22 12 22C12 22 12 12 22 12C12 12 12 2 12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="none"/>
-    </svg>
-  ),
-  Copilot: (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Copilot">
-      <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M8 12h8M12 8l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
+// Real logo images for top AI sources
+const AI_LOGOS: Record<string, string> = {
+  ChatGPT: "/llm-logos/chatgpt.png",
+  Perplexity: "/llm-logos/perplexity.png",
+  Claude: "/llm-logos/claude.png",
+  Gemini: "/llm-logos/gemini.png",
+  DeepSeek: "/llm-logos/deepseek.png",
+  Grok: "/llm-logos/grok.png",
+  Copilot: "/llm-logos/chatgpt.png",
 };
 
 export const Route = createFileRoute("/results")({
@@ -59,8 +38,9 @@ export const Route = createFileRoute("/results")({
   }),
   head: () => ({
     meta: [
-      { title: "Your AI Traffic — Is AI Sending Me Traffic?" },
-      { name: "description", content: "Your AI traffic analysis results." },
+      { title: "Your AI Traffic Report — Is AI Sending Me Traffic?" },
+      { name: "description", content: "Your AI traffic analysis results from Google Analytics." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   loader: async ({ deps }) => {
@@ -75,10 +55,14 @@ export const Route = createFileRoute("/results")({
           days: deps.days,
         },
       });
-      // Fire-and-forget — never blocks or fails the page
-      saveScan({
-        data: { propertyId: deps.propertyId, report: result.report },
-      }).catch(() => {});
+      // Must await — CF Workers kill unawaited promises after response
+      try {
+        await saveScan({
+          data: { propertyId: deps.propertyId, report: result.report },
+        });
+      } catch {
+        // Never let tracking block the page
+      }
       return { report: result.report, error: null };
     } catch (e: unknown) {
       console.error("Report fetch failed:", e);
@@ -130,7 +114,6 @@ function LoadingState() {
 function ResultsPage() {
   const { report, error } = Route.useLoaderData();
   const { propertyId, propertyName, days } = Route.useSearch();
-  const navigate = useNavigate();
   const [copied, setCopied] = useState<"summary" | null>(null);
 
   if (error || !report) {
@@ -193,8 +176,8 @@ function ResultsPage() {
     report.state === "meaningful"
       ? "bg-primary"
       : report.state === "low"
-        ? "bg-amber-400"
-        : "bg-border";
+        ? "bg-primary/40"
+        : "bg-muted-foreground/20";
 
   return (
     <div className="min-h-screen bg-background">
@@ -204,7 +187,7 @@ function ResultsPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
           <div className="flex items-center gap-3">
             <a href="/" aria-label="Home">
-              <img src="/isaisendingmetraffic-logo-small.png" alt="Is AI Sending Me Traffic?" className="h-6 w-auto hover:opacity-80 transition-opacity" />
+              <img src="/isaisendingmetraffic-logo-small.png" alt="Is AI Sending Me Traffic?" width={90} height={24} className="h-6 w-auto hover:opacity-80 transition-opacity" />
             </a>
             <p
               className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
@@ -217,15 +200,11 @@ function ResultsPage() {
           {/* Period switcher */}
           <div className="flex items-center gap-1 bg-muted/60 rounded-lg p-0.5 print-hide">
             {PERIOD_OPTIONS.map((opt) => (
-              <button
+              <Link
                 key={opt.days}
-                onClick={() =>
-                  navigate({
-                    to: "/results",
-                    search: { propertyId, propertyName, days: opt.days },
-                  })
-                }
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                to="/results"
+                search={{ propertyId, propertyName, days: opt.days }}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors no-underline ${
                   days === opt.days
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -233,7 +212,7 @@ function ResultsPage() {
                 style={{ fontFamily: bodyFont }}
               >
                 {opt.label}
-              </button>
+              </Link>
             ))}
           </div>
         </div>
@@ -292,23 +271,6 @@ function ResultsPage() {
               because some visits may appear unattributed or grouped elsewhere.
             </p>
 
-            {/* Footer (desktop only on left) */}
-            <footer className="hidden md:block pb-6 print-footer text-center">
-              <p
-                className="text-[11px] text-muted-foreground/40"
-                style={{ fontFamily: bodyFont }}
-              >
-                With <span className="text-blue-500">♥</span> by{"\ "}
-                <a
-                  href="https://www.lovedbyai.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:text-blue-600 transition-colors font-medium"
-                >
-                  lovedbyai
-                </a>
-              </p>
-            </footer>
           </div>
 
           {/* RIGHT COLUMN */}
@@ -338,33 +300,7 @@ function ResultsPage() {
                   </h2>
                   <span className="text-[11px] text-muted-foreground/40" style={{ fontFamily: bodyFont }}>sessions</span>
                 </div>
-                <div className="rounded-xl border border-border bg-card overflow-hidden">
-                  {report.topPages.slice(0, 5).map(
-                    (p: { path: string; sessions: number }, idx: number) => (
-                      <div
-                        key={p.path}
-                        className={`flex items-center justify-between px-4 py-3 ${
-                          idx < Math.min(report.topPages.length, 5) - 1
-                            ? "border-b border-border/50"
-                            : ""
-                        }`}
-                      >
-                        <p
-                          className="text-sm text-muted-foreground truncate mr-4 flex-1"
-                          style={{ fontFamily: bodyFont }}
-                        >
-                          {p.path}
-                        </p>
-                        <p
-                          className="text-sm font-semibold text-foreground whitespace-nowrap"
-                          style={{ fontFamily: bodyFont }}
-                        >
-                          {p.sessions}
-                        </p>
-                      </div>
-                    )
-                  )}
-                </div>
+                <PageList pages={report.topPages} />
               </section>
             )}
 
@@ -381,23 +317,32 @@ function ResultsPage() {
               <button
                 onClick={async () => {
                   try {
-                    if (navigator.clipboard?.writeText) {
-                      await navigator.clipboard.writeText(shareText);
-                    } else {
-                      // Fallback for older iOS Safari
-                      const el = document.createElement("textarea");
-                      el.value = shareText;
-                      el.style.position = "fixed";
-                      el.style.opacity = "0";
-                      document.body.appendChild(el);
-                      el.focus();
-                      el.select();
-                      document.execCommand("copy");
-                      document.body.removeChild(el);
-                    }
+                    // Try modern clipboard API first
+                    await navigator.clipboard.writeText(shareText);
                     setCopied("summary");
                     setTimeout(() => setCopied(null), 2000);
-                  } catch { /* silent fail */ }
+                  } catch {
+                    try {
+                      // Fallback for iOS Safari and older browsers
+                      const el = document.createElement("textarea");
+                      el.value = shareText;
+                      el.setAttribute("readonly", "");
+                      el.style.position = "fixed";
+                      el.style.left = "-9999px";
+                      el.style.opacity = "0";
+                      document.body.appendChild(el);
+                      const range = document.createRange();
+                      range.selectNodeContents(el);
+                      const sel = window.getSelection();
+                      sel?.removeAllRanges();
+                      sel?.addRange(range);
+                      el.setSelectionRange(0, shareText.length);
+                      document.execCommand("copy");
+                      document.body.removeChild(el);
+                      setCopied("summary");
+                      setTimeout(() => setCopied(null), 2000);
+                    } catch { /* silent fail */ }
+                  }
                 }}
                 className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors text-left flex items-center gap-3"
                 style={{ fontFamily: bodyFont }}
@@ -466,40 +411,22 @@ function ResultsPage() {
                   className="text-xs text-muted-foreground mb-4"
                   style={{ fontFamily: bodyFont }}
                 >
-                  LovedByAI helps businesses get discovered — and cited — by AI
-                  tools.
+                  LovedByAI helps businesses get discovered by AI tools, automagically.
                 </p>
                 <a
-                  href="https://lovedbyai.com"
+                  href="https://www.lovedby.ai"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
                   style={{ fontFamily: bodyFont }}
                 >
-                  See how LovedByAI works →
+                  See how it works →
                 </a>
               </div>
             </section>
           </div>
         </div>
 
-        {/* Footer mobile */}
-        <footer className="md:hidden pb-6 text-center print-footer">
-          <p
-            className="text-[11px] text-muted-foreground/40"
-            style={{ fontFamily: bodyFont }}
-          >
-            With <span className="text-blue-500">♥</span> by{"\ "}
-            <a
-              href="https://www.lovedbyai.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:text-blue-600 transition-colors font-medium"
-            >
-              lovedbyai
-            </a>
-          </p>
-        </footer>
       </div>
     </div>
   );
@@ -509,7 +436,7 @@ function HeroCard({ report, periodLabel }: { report: AITrafficReport; periodLabe
   const headlines: Record<AITrafficReport["state"], string> = {
     meaningful: "AI is actively sending you visitors",
     low: "You may already have AI traffic",
-    none: "No meaningful AI traffic found — yet",
+    none: "No AI traffic detected yet",
   };
 
   return (
@@ -575,9 +502,7 @@ function HeroCard({ report, periodLabel }: { report: AITrafficReport; periodLabe
                   style={{ fontFamily: bodyFont }}
                 >
                   {AI_LOGOS[report.topSource.label] && (
-                    <span className="text-muted-foreground/60 flex-none">
-                      {AI_LOGOS[report.topSource.label]}
-                    </span>
+                    <img src={AI_LOGOS[report.topSource.label]} alt={`${report.topSource.label} logo`} width={16} height={16} className="w-4 h-4 flex-none rounded-sm object-contain" />
                   )}
                   {report.topSource.label}
                 </span>
@@ -648,60 +573,122 @@ function SourceList({
     users: number;
   }>;
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const INITIAL_COUNT = 5;
   const max = Math.max(...sources.map((s) => s.sessions), 1);
+  const visible = expanded ? sources : sources.slice(0, INITIAL_COUNT);
+  const hasMore = sources.length > INITIAL_COUNT;
+
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
-      {sources.map((s, idx) => (
-        <div
-          key={s.source}
-          className={`relative px-4 py-3.5 ${
-            idx < sources.length - 1 ? "border-b border-border/50" : ""
-          }`}
-        >
-          {/* Proportional fill bar */}
+    <div>
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        {visible.map((s, idx) => (
           <div
-            className="absolute inset-y-0 left-0 bg-primary/6 pointer-events-none"
-            style={{ width: `${(s.sessions / max) * 100}%` }}
-          />
-          <div className="relative flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {AI_LOGOS[s.label] && (
-                <span className="text-muted-foreground/60 flex-none">
-                  {AI_LOGOS[s.label]}
-                </span>
-              )}
-              <div>
+            key={s.source}
+            className={`relative px-4 py-3.5 ${
+              idx < visible.length - 1 ? "border-b border-border/50" : ""
+            }`}
+          >
+            {/* Proportional fill bar */}
+            <div
+              className="absolute inset-y-0 left-0 bg-primary/6 pointer-events-none"
+              style={{ width: `${(s.sessions / max) * 100}%` }}
+            />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {AI_LOGOS[s.label] && (
+                  <img src={AI_LOGOS[s.label]} alt={`${s.label} logo`} width={20} height={20} loading="lazy" className="w-5 h-5 flex-none rounded-sm object-contain" />
+                )}
+                <div>
+                  <p
+                    className="text-sm font-semibold text-foreground"
+                    style={{ fontFamily: bodyFont }}
+                  >
+                    {s.label}
+                  </p>
+                  <p
+                    className="text-[11px] text-muted-foreground/70"
+                    style={{ fontFamily: bodyFont }}
+                  >
+                    {s.source}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
                 <p
                   className="text-sm font-semibold text-foreground"
                   style={{ fontFamily: bodyFont }}
                 >
-                  {s.label}
+                  {s.sessions}
                 </p>
                 <p
                   className="text-[11px] text-muted-foreground/70"
                   style={{ fontFamily: bodyFont }}
                 >
-                  {s.source}
+                  sessions
                 </p>
               </div>
             </div>
-            <div className="text-right">
-              <p
-                className="text-sm font-semibold text-foreground"
-                style={{ fontFamily: bodyFont }}
-              >
-                {s.sessions}
-              </p>
-              <p
-                className="text-[11px] text-muted-foreground/70"
-                style={{ fontFamily: bodyFont }}
-              >
-                sessions
-              </p>
-            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+      {hasMore && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          style={{ fontFamily: bodyFont }}
+        >
+          {expanded ? "Show less" : `See all ${sources.length} sources`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function PageList({
+  pages,
+}: {
+  pages: Array<{ path: string; sessions: number }>;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const INITIAL_COUNT = 5;
+  const visible = expanded ? pages : pages.slice(0, INITIAL_COUNT);
+  const hasMore = pages.length > INITIAL_COUNT;
+
+  return (
+    <div>
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        {visible.map((p, idx) => (
+          <div
+            key={p.path}
+            className={`flex items-center justify-between px-4 py-3 ${
+              idx < visible.length - 1 ? "border-b border-border/50" : ""
+            }`}
+          >
+            <p
+              className="text-sm text-muted-foreground truncate mr-4 flex-1"
+              style={{ fontFamily: bodyFont }}
+            >
+              {p.path}
+            </p>
+            <p
+              className="text-sm font-semibold text-foreground whitespace-nowrap"
+              style={{ fontFamily: bodyFont }}
+            >
+              {p.sessions}
+            </p>
+          </div>
+        ))}
+      </div>
+      {hasMore && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          style={{ fontFamily: bodyFont }}
+        >
+          {expanded ? "Show less" : `See all ${pages.length} pages`}
+        </button>
+      )}
     </div>
   );
 }
@@ -755,13 +742,22 @@ function ZeroState({
   return (
     <section className="mb-6">
       <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-        <p
-          className="text-sm text-muted-foreground leading-relaxed"
-          style={{ fontFamily: bodyFont }}
-        >
-          That's normal for many businesses. AI traffic is still emerging and
-          is often undercounted in analytics tools.
-        </p>
+        <div>
+          <p
+            className="text-sm font-semibold text-foreground mb-1"
+            style={{ fontFamily: bodyFont }}
+          >
+            This is normal for most sites
+          </p>
+          <p
+            className="text-sm text-muted-foreground leading-relaxed"
+            style={{ fontFamily: bodyFont }}
+          >
+            AI traffic is growing quickly but still represents a small share
+            of total visits for most businesses. It's also often undercounted —
+            some AI-referred visits aren't clearly attributed in Google Analytics.
+          </p>
+        </div>
 
         {topOrganicPages.length > 0 && (
           <div>
@@ -800,10 +796,10 @@ function ZeroState({
             className="text-xs text-muted-foreground mb-1"
             style={{ fontFamily: bodyFont }}
           >
-            Want help becoming easier for AI tools to find and cite?
+            Want AI tools to start recommending your site?
           </p>
           <a
-            href="https://lovedbyai.com"
+            href="https://www.lovedby.ai"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
