@@ -207,7 +207,7 @@ function ResultsPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
           <div className="flex items-center gap-3">
             <a href="/" aria-label="Home">
-              <img src="/isaisendingmetraffic-logo-small.png" alt="Is AI Sending Me Traffic?" width={90} height={24} className="h-6 w-auto hover:opacity-80 transition-opacity" />
+              <img src="/isaisendingmetraffic-logo.png" alt="Is AI Sending Me Traffic?" width={90} height={24} className="h-6 w-auto hover:opacity-80 transition-opacity" />
             </a>
             <p
               className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
