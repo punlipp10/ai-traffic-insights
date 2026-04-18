@@ -198,21 +198,19 @@ function AccordionItem({ item, index }: { item: FAQItem; index: number }) {
         </span>
       </button>
 
-      {/* Smooth expand via grid-template-rows */}
+      {/* Expand/collapse */}
       <div
         style={{
-          display: "grid",
-          gridTemplateRows: open ? "1fr" : "0fr",
-          transition: "grid-template-rows 0.28s cubic-bezier(0.4,0,0.2,1)",
+          overflow: "hidden",
+          maxHeight: open ? "600px" : "0px",
+          transition: "max-height 0.28s cubic-bezier(0.4,0,0.2,1)",
         }}
       >
-        <div style={{ overflow: "hidden", minHeight: 0 }}>
-          <div
-            className="pb-5 space-y-3 text-muted-foreground leading-relaxed"
-            style={{ fontFamily: bodyFont, fontSize: "0.9375rem", maxWidth: "58ch" }}
-          >
-            {item.a}
-          </div>
+        <div
+          className="pb-5 space-y-3 text-muted-foreground leading-relaxed"
+          style={{ fontFamily: bodyFont, fontSize: "0.9375rem", maxWidth: "58ch" }}
+        >
+          {item.a}
         </div>
       </div>
     </div>
