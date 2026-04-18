@@ -171,6 +171,11 @@
   .mb-10 { margin-bottom: 0 !important; }
   .py-10, .md\\:py-14 { padding-top: 0.5cm !important; padding-bottom: 0 !important; }
 
+  /* Prevent content from being clipped on narrow (mobile) paper */
+  * { max-width: 100% !important; overflow: visible !important; }
+  .overflow-hidden { overflow: visible !important; }
+  .truncate { white-space: normal !important; overflow: visible !important; text-overflow: unset !important; }
+
   .rounded-2xl,
   .rounded-xl {
     border: 1px solid #e5e7eb;

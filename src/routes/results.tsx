@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { fetchAITrafficReport } from "@/lib/ga4.functions";
 import { saveScan } from "@/lib/tracking.functions";
 import type { AITrafficReport } from "@/lib/ai-sources";
@@ -122,7 +122,6 @@ function ResultsPage() {
   const { propertyId, propertyName, days } = Route.useSearch();
   const [copied, setCopied] = useState<"summary" | "error" | null>(null);
   const [loadingPeriod, setLoadingPeriod] = useState<number | null>(null);
-  const reportRef = useRef<HTMLDivElement>(null);
 
   if (error || !report) {
     return (
@@ -255,7 +254,7 @@ function ResultsPage() {
         </div>
 
         {/* Desktop two-column grid */}
-        <div ref={reportRef} className="md:grid md:grid-cols-[1fr_340px] md:gap-8 lg:grid-cols-[1fr_380px]">
+        <div className="md:grid md:grid-cols-[1fr_340px] md:gap-8 lg:grid-cols-[1fr_380px]">
 
           {/* LEFT COLUMN */}
           <div>
@@ -355,62 +354,14 @@ function ResultsPage() {
                 type="button"
                 onClick={async () => {
                   try {
-                    // Take screenshot of the report area
-                    let imageBlob: Blob | null = null;
-                    if (reportRef.current) {
-                      const { default: html2canvas } = await import("html2canvas-pro");
-                      // Hide print-hide elements during capture
-                      const hiddenEls = reportRef.current.querySelectorAll(".print-hide");
-                      hiddenEls.forEach((el) => ((el as HTMLElement).style.visibility = "hidden"));
-                      const canvas = await html2canvas(reportRef.current, {
-                        backgroundColor: "#09090b",
-                        scale: 2,
-                        useCORS: true,
-                        logging: false,
-                      });
-                      hiddenEls.forEach((el) => ((el as HTMLElement).style.visibility = ""));
-                      imageBlob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/png"));
-                    }
-
-                    // 1. Web Share API (mobile) — share image + text
-                    if (typeof navigator.share === "function" && imageBlob) {
-                      try {
-                        const file = new File([imageBlob], "ai-traffic-report.png", { type: "image/png" });
-                        await navigator.share({ title: "AI Traffic Report", text: shareText, files: [file] });
-                        setCopied("summary");
-                        setTimeout(() => setCopied(null), 2000);
-                        return;
-                      } catch (e: unknown) {
-                        if ((e as Error).name === "AbortError") return;
-                      }
-                    }
-
-                    // 2. Clipboard API — write image + text together
-                    if (navigator.clipboard?.write && imageBlob) {
-                      try {
-                        await navigator.clipboard.write([
-                          new ClipboardItem({
-                            "image/png": imageBlob,
-                            "text/plain": new Blob([shareText], { type: "text/plain" }),
-                          }),
-                        ]);
-                        setCopied("summary");
-                        setTimeout(() => setCopied(null), 2000);
-                        return;
-                      } catch { /* fall through to text-only */ }
-                    }
-
-                    // 3. Text-only clipboard fallback
+                    // 1. Clipboard API
                     if (navigator.clipboard?.writeText) {
-                      try {
-                        await navigator.clipboard.writeText(shareText);
-                        setCopied("summary");
-                        setTimeout(() => setCopied(null), 2000);
-                        return;
-                      } catch { /* fall through */ }
+                      await navigator.clipboard.writeText(shareText);
+                      setCopied("summary");
+                      setTimeout(() => setCopied(null), 2000);
+                      return;
                     }
-
-                    // 4. execCommand fallback
+                    // 2. execCommand fallback
                     const el = document.createElement("textarea");
                     el.value = shareText;
                     el.style.cssText = "position:fixed;left:-9999px;top:-9999px;opacity:0";
@@ -440,7 +391,7 @@ function ResultsPage() {
                     {copied === "summary" ? "Copied!" : copied === "error" ? "Could not copy" : "Copy summary"}
                   </p>
                   <p className="text-[11px] text-muted-foreground/60 mt-0.5">
-                    {copied === "error" ? "Try long-pressing or right-clicking to copy" : "Screenshot + text summary to your clipboard"}
+                    {copied === "error" ? "Try long-pressing or right-clicking to copy" : "Key numbers + site link to your clipboard"}
                   </p>
                 </div>
               </button>
@@ -732,8 +683,10 @@ function PageList({
 }) {
   const [expanded, setExpanded] = useState(false);
   const INITIAL_COUNT = 5;
-  const visible = expanded ? pages : pages.slice(0, INITIAL_COUNT);
-  const hasMore = pages.length > INITIAL_COUNT;
+  const MAX_PAGES = 10;
+  const capped = pages.slice(0, MAX_PAGES);
+  const visible = expanded ? capped : capped.slice(0, INITIAL_COUNT);
+  const hasMore = capped.length > INITIAL_COUNT;
 
   return (
     <div>
@@ -767,7 +720,7 @@ function PageList({
           className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           style={{ fontFamily: bodyFont }}
         >
-          {expanded ? "Show less" : `See all ${pages.length} pages`}
+          {expanded ? "Show less" : `See all ${capped.length} pages`}
         </button>
       )}
     </div>

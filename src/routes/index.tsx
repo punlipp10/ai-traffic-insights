@@ -37,7 +37,7 @@ function LandingPage() {
             >
               <span
                 className="block md:hidden"
-                style={{ fontSize: "clamp(3rem, 12vw, 5rem)" }}
+                style={{ fontSize: "clamp(3.5rem, 14vw, 5.5rem)" }}
               >
                 IS AI SENDING<br />ME TRAFFIC?
               </span>
