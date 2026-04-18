@@ -7,7 +7,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Free AI traffic checker — connect your Google Analytics and instantly see if ChatGPT, Perplexity, Claude, Gemini, and other AI tools are sending visitors to your website.",
+          "Free AI traffic checker, connect your Google Analytics and instantly see if ChatGPT, Perplexity, Claude, Gemini, and other AI tools are sending visitors to your website.",
       },
     ],
     links: [
