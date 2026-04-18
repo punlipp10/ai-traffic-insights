@@ -26,11 +26,15 @@ const KNOWN_AI_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
   { pattern: /jasper\.ai/i, label: "Jasper" },
   { pattern: /meta\.ai/i, label: "Meta AI" },
   { pattern: /huggingface\.co/i, label: "Hugging Face" },
+  { pattern: /grok\.com/i, label: "Grok" },
+  { pattern: /x\.ai/i, label: "Grok" },
+  { pattern: /deepseek\.com/i, label: "DeepSeek" },
+  { pattern: /chat\.mistral\.ai/i, label: "Mistral" },
 ];
 
 const POSSIBLE_AI_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
   { pattern: /edgeservices\.bing\.com/i, label: "Bing (AI)" },
-  { pattern: /bing\.com/i, label: "Bing" },
+  { pattern: /copilot\.bing\.com/i, label: "Bing Copilot" },
 ];
 
 export function matchAISource(source: string): AISourceMatch | null {
