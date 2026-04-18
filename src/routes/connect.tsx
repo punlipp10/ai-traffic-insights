@@ -38,6 +38,7 @@ function ConnectPage() {
   const { properties, error } = Route.useLoaderData();
   const navigate = useNavigate();
   const [disconnecting, setDisconnecting] = useState(false);
+  const [loadingProperty, setLoadingProperty] = useState<string | null>(null);
 
   const handleDisconnect = async () => {
     setDisconnecting(true);
@@ -186,22 +187,30 @@ function ConnectPage() {
                 key={prop.propertyId}
                 to="/results"
                 search={{ propertyId: prop.propertyId, propertyName: prop.displayName }}
+                onClick={() => setLoadingProperty(prop.propertyId)}
                 className={`block w-full text-left px-5 py-4 hover:bg-muted/40 active:bg-muted/70 transition-colors ${
                   idx < properties.length - 1 ? "border-b border-border/50" : ""
-                }`}
+                } ${loadingProperty === prop.propertyId ? "bg-muted/40" : ""}`}
               >
-                <p
-                  className="font-semibold text-foreground text-sm"
-                  style={{ fontFamily: bodyFont }}
-                >
-                  {prop.displayName}
-                </p>
-                <p
-                  className="text-[11px] text-muted-foreground/70 mt-0.5"
-                  style={{ fontFamily: bodyFont }}
-                >
-                  {prop.accountName} · {prop.propertyId}
-                </p>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p
+                      className="font-semibold text-foreground text-sm"
+                      style={{ fontFamily: bodyFont }}
+                    >
+                      {prop.displayName}
+                    </p>
+                    <p
+                      className="text-[11px] text-muted-foreground/70 mt-0.5"
+                      style={{ fontFamily: bodyFont }}
+                    >
+                      {prop.accountName} · {prop.propertyId}
+                    </p>
+                  </div>
+                  {loadingProperty === prop.propertyId && (
+                    <span className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin flex-none" />
+                  )}
+                </div>
               </Link>
             )
           )}

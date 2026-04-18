@@ -80,6 +80,10 @@ const LOADING_MESSAGES = [
   "Crunching the numbers...",
 ];
 
+function formatPath(path: string): string {
+  return path === "/" ? "/ (homepage)" : path;
+}
+
 function LoadingState() {
   const [msgIdx, setMsgIdx] = useState(0);
 
@@ -115,6 +119,11 @@ function ResultsPage() {
   const { report, error } = Route.useLoaderData();
   const { propertyId, propertyName, days } = Route.useSearch();
   const [copied, setCopied] = useState<"summary" | null>(null);
+  const [loadingPeriod, setLoadingPeriod] = useState<number | null>(null);
+
+  useEffect(() => {
+    setLoadingPeriod(null);
+  }, [days]);
 
   if (error || !report) {
     return (
@@ -170,7 +179,7 @@ function ResultsPage() {
   const shareText =
     report.state === "none"
       ? `I checked whether AI tools are sending traffic to my site (${report.propertyName}). Not yet — but it's worth keeping an eye on. Check yours: isaisendingmetraffic.com`
-      : `AI tools sent ${report.totalAISessions.toLocaleString()} visits to ${report.propertyName} in the last ${periodLabel}.${report.topSource ? ` Top source: ${report.topSource.label}.` : ""}${report.topPage ? ` Top page: ${report.topPage.path}.` : ""} Check yours: isaisendingmetraffic.com`;
+      : `AI tools sent ${report.totalAISessions.toLocaleString()} visits to ${report.propertyName} in the last ${periodLabel}.${report.topSource ? ` Top source: ${report.topSource.label}.` : ""}${report.topPage ? ` Top page: ${formatPath(report.topPage.path)}.` : ""} Check yours: isaisendingmetraffic.com`;
 
   const stateBar =
     report.state === "meaningful"
@@ -204,13 +213,17 @@ function ResultsPage() {
                 key={opt.days}
                 to="/results"
                 search={{ propertyId, propertyName, days: opt.days }}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors no-underline ${
+                onClick={() => { if (opt.days !== days) setLoadingPeriod(opt.days); }}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors no-underline flex items-center gap-1 ${
                   days === opt.days
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
                 style={{ fontFamily: bodyFont }}
               >
+                {loadingPeriod === opt.days && (
+                  <span className="w-2.5 h-2.5 rounded-full border border-current border-t-transparent animate-spin inline-block" />
+                )}
                 {opt.label}
               </Link>
             ))}
@@ -315,6 +328,7 @@ function ResultsPage() {
 
               {/* Copy summary */}
               <button
+                type="button"
                 onClick={async () => {
                   try {
                     // Try modern clipboard API first
@@ -344,7 +358,7 @@ function ResultsPage() {
                     } catch { /* silent fail */ }
                   }
                 }}
-                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors text-left flex items-center gap-3"
+                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors text-left flex items-center gap-3 cursor-pointer"
                 style={{ fontFamily: bodyFont }}
               >
                 <span className="text-base leading-none">{copied === "summary" ? "✓" : "📋"}</span>
@@ -356,8 +370,9 @@ function ResultsPage() {
 
               {/* Download PDF */}
               <button
+                type="button"
                 onClick={() => window.print()}
-                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors text-left flex items-center gap-3"
+                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors text-left flex items-center gap-3 cursor-pointer"
                 style={{ fontFamily: bodyFont }}
               >
                 <span className="text-base leading-none">📄</span>
@@ -382,20 +397,7 @@ function ResultsPage() {
                 </div>
               </Link>
 
-              {/* Check another site */}
-              <a
-                href="/auth/google"
-                className="block w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors text-left"
-                style={{ fontFamily: bodyFont }}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-base leading-none">🌐</span>
-                  <div>
-                    <p className="font-medium text-sm">Check another site</p>
-                    <p className="text-[11px] text-muted-foreground/60 mt-0.5">Connect a different Google account</p>
-                  </div>
-                </div>
-              </a>
+
             </section>
 
             {/* Soft CTA */}
@@ -520,7 +522,7 @@ function HeroCard({ report, periodLabel }: { report: AITrafficReport; periodLabe
                   className="text-sm font-semibold text-foreground text-right truncate max-w-[200px]"
                   style={{ fontFamily: bodyFont }}
                 >
-                  {report.topPage.path}
+                  {formatPath(report.topPage.path)}
                 </span>
               </div>
             )}
@@ -634,8 +636,9 @@ function SourceList({
       </div>
       {hasMore && (
         <button
+          type="button"
           onClick={() => setExpanded(!expanded)}
-          className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           style={{ fontFamily: bodyFont }}
         >
           {expanded ? "Show less" : `See all ${sources.length} sources`}
@@ -669,7 +672,7 @@ function PageList({
               className="text-sm text-muted-foreground truncate mr-4 flex-1"
               style={{ fontFamily: bodyFont }}
             >
-              {p.path}
+              {formatPath(p.path)}
             </p>
             <p
               className="text-sm font-semibold text-foreground whitespace-nowrap"
@@ -682,8 +685,9 @@ function PageList({
       </div>
       {hasMore && (
         <button
+          type="button"
           onClick={() => setExpanded(!expanded)}
-          className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           style={{ fontFamily: bodyFont }}
         >
           {expanded ? "Show less" : `See all ${pages.length} pages`}
@@ -831,7 +835,7 @@ function WhatThisMeans({ report, periodLabel }: { report: AITrafficReport; perio
 
     if (report.topPage) {
       insights.push(
-        `Most of your AI traffic is landing on ${report.topPage.path}.`
+        `Most of your AI traffic is landing on ${formatPath(report.topPage.path)}.`
       );
     }
 
