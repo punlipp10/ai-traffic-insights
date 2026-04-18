@@ -14,16 +14,57 @@ const PERIOD_OPTIONS = [
   { label: "12m", days: 365 },
 ];
 
-// Real logo images for top AI sources
-const AI_LOGOS: Record<string, string> = {
+// Local logo images for top AI sources
+const LOCAL_LOGOS: Record<string, string> = {
   ChatGPT: "/llm-logos/chatgpt.png",
   Perplexity: "/llm-logos/perplexity.png",
   Claude: "/llm-logos/claude.png",
   Gemini: "/llm-logos/gemini.png",
   DeepSeek: "/llm-logos/deepseek.png",
   Grok: "/llm-logos/grok.png",
-  Copilot: "/llm-logos/chatgpt.png",
 };
+
+// Domain mappings for logo.dev fallback
+const LOGO_DOMAINS: Record<string, string> = {
+  ChatGPT: "chatgpt.com",
+  OpenAI: "openai.com",
+  Perplexity: "perplexity.ai",
+  Claude: "claude.ai",
+  Anthropic: "anthropic.com",
+  Gemini: "google.com",
+  "Google Bard": "google.com",
+  "Microsoft Copilot": "microsoft.com",
+  Grok: "x.ai",
+  DeepSeek: "deepseek.com",
+  Mistral: "mistral.ai",
+  "Meta AI": "meta.com",
+  Kagi: "kagi.com",
+  "You.com": "you.com",
+  Phind: "phind.com",
+  Andi: "andisearch.com",
+  iAsk: "iask.ai",
+  Exa: "exa.ai",
+  Consensus: "consensus.app",
+  Poe: "poe.com",
+  "Hugging Face": "huggingface.co",
+  Pi: "pi.ai",
+  Cohere: "cohere.com",
+  Writesonic: "writesonic.com",
+  Jasper: "jasper.ai",
+  "Bing (AI)": "bing.com",
+  "Bing Copilot": "bing.com",
+  "Brave (AI)": "brave.com",
+  "Arc Search": "arc.net",
+};
+
+const LOGO_DEV_KEY = "pk_MAd3vkvPQk6dt8pgj2gnOg";
+
+function getLogoUrl(label: string, source?: string): string | null {
+  if (LOCAL_LOGOS[label]) return LOCAL_LOGOS[label];
+  const domain = LOGO_DOMAINS[label] || source;
+  if (domain) return `https://img.logo.dev/${domain}?token=${LOGO_DEV_KEY}&size=64&format=png`;
+  return null;
+}
 
 export const Route = createFileRoute("/results")({
   validateSearch: (search) => ({
@@ -563,8 +604,8 @@ function HeroCard({ report, periodLabel }: { report: AITrafficReport; periodLabe
                   className="flex items-center gap-1.5 text-sm font-semibold text-foreground text-right"
                   style={{ fontFamily: bodyFont }}
                 >
-                  {AI_LOGOS[report.topSource.label] && (
-                    <img src={AI_LOGOS[report.topSource.label]} alt={`${report.topSource.label} logo`} width={16} height={16} className="w-4 h-4 flex-none rounded-sm object-contain" />
+                  {getLogoUrl(report.topSource.label) && (
+                    <img src={getLogoUrl(report.topSource.label)!} alt={`${report.topSource.label} logo`} width={16} height={16} className="w-4 h-4 flex-none rounded-sm object-contain" />
                   )}
                   {report.topSource.label}
                 </span>
@@ -658,8 +699,8 @@ function SourceList({
             />
             <div className="relative flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {AI_LOGOS[s.label] && (
-                  <img src={AI_LOGOS[s.label]} alt={`${s.label} logo`} width={20} height={20} loading="lazy" className="w-5 h-5 flex-none rounded-sm object-contain" />
+                {getLogoUrl(s.label, s.source) && (
+                  <img src={getLogoUrl(s.label, s.source)!} alt={`${s.label} logo`} width={20} height={20} loading="lazy" className="w-5 h-5 flex-none rounded-sm object-contain" />
                 )}
                 <div>
                   <p
