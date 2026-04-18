@@ -174,10 +174,23 @@ function ResultsPage() {
     days === 365 ? "12 months" :
     `${days} days`;
 
-  const shareText =
-    report.state === "none"
-      ? `I checked whether AI tools are sending traffic to my site (${report.propertyName}). Not yet, but it's worth keeping an eye on. Check yours: isaisendingmetraffic.com`
-      : `AI tools sent ${report.totalAISessions.toLocaleString('en-US')} visits to ${report.propertyName} in the last ${periodLabel}.${report.topSource ? ` Top source: ${report.topSource.label}.` : ""}${report.topPage ? ` Top page: ${formatPath(report.topPage.path)}.` : ""} Check yours: isaisendingmetraffic.com`;
+  const shareText = (() => {
+    if (report.state === "none") {
+      return `I checked whether AI tools are sending traffic to my site (${report.propertyName}). Not yet, but it's worth keeping an eye on. Check yours: isaisendingmetraffic.com`;
+    }
+    const growth = report.changePercent !== null
+      ? ` (${report.changePercent >= 0 ? "+" : ""}${Math.round(report.changePercent)}% vs prev period)`
+      : "";
+    const topSources = report.sourceBreakdown.slice(0, 2);
+    const sourceLine = topSources.length > 0
+      ? ` Top source: ${topSources[0].label} with ${topSources[0].sessions.toLocaleString("en-US")} visits${topSources[1] ? `, then ${topSources[1].label} with ${topSources[1].sessions.toLocaleString("en-US")}` : ""}.`
+      : "";
+    const topPgs = report.topPages.slice(0, 2);
+    const pageLine = topPgs.length > 0
+      ? ` Top page: ${formatPath(topPgs[0].path)} with ${topPgs[0].sessions.toLocaleString("en-US")} visits${topPgs[1] ? `, then ${formatPath(topPgs[1].path)} with ${topPgs[1].sessions.toLocaleString("en-US")}` : ""}.`
+      : "";
+    return `AI tools sent ${report.totalAISessions.toLocaleString("en-US")} visits to ${report.propertyName} in the last ${periodLabel}${growth}.${sourceLine}${pageLine} Data from isaisendingmetraffic.com`;
+  })();
 
   const stateBar =
     report.state === "meaningful"
