@@ -155,6 +155,7 @@ function AccordionItem({ item, index }: { item: FAQItem; index: number }) {
   return (
     <div className="border-t border-border">
       <button
+        type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className="w-full flex items-start justify-between gap-4 py-5 text-left group"
@@ -236,9 +237,8 @@ function FAQPage() {
 
         {/* Header */}
         <header className="mt-10 mb-10">
-          <div className="w-8 h-[3px] bg-primary mb-5" aria-hidden="true" />
           <h1
-            className="uppercase text-foreground font-bold leading-none mb-3"
+            className="uppercase text-foreground font-bold leading-none"
             style={{
               fontFamily: displayFont,
               fontSize: "clamp(3rem, 10vw, 4.5rem)",
@@ -247,9 +247,6 @@ function FAQPage() {
           >
             FAQ
           </h1>
-          <p className="text-muted-foreground" style={{ fontSize: "0.9375rem", maxWidth: "38ch" }}>
-            Everything you want to know about this tool, answered plainly.
-          </p>
         </header>
 
         {/* Accordion */}
@@ -257,60 +254,39 @@ function FAQPage() {
           {FAQ_ITEMS.map((item, i) => (
             <AccordionItem key={i} item={item} index={i} />
           ))}
-          {/* Bottom border */}
-          <div className="border-t border-border" />
         </section>
 
-        {/* CTA */}
-        <div className="mt-14 pt-8 border-t border-border">
-          <p
-            className="text-muted-foreground mb-5"
-            style={{ fontSize: "0.9375rem" }}
-          >
-            Still have a question?{" "}
-            <a
-              href="mailto:info@lovedby.ai"
-              className="text-foreground underline underline-offset-2 hover:text-primary transition-colors"
+        {/* Footer */}
+        <footer className="mt-12 flex flex-col items-center gap-1.5" style={{ fontFamily: bodyFont }}>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/faq"
+              className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
             >
-              Drop us a line.
+              FAQ
+            </Link>
+            <span className="text-border text-xs" aria-hidden="true">·</span>
+            <Link
+              to="/privacy"
+              className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            >
+              Privacy
+            </Link>
+          </div>
+          <p className="text-xs text-muted-foreground/50">
+            With{" "}
+            <span className="text-blue-500" aria-hidden="true">♥</span>
+            <span className="sr-only">love</span>
+            {" "}by{" "}
+            <a
+              href="https://www.lovedby.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-600 transition-colors font-medium"
+            >
+              lovedby.ai
             </a>
           </p>
-          <a
-            href="/auth/google"
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold rounded-xl px-6 py-3.5 hover:opacity-90 active:scale-[0.98] transition-all"
-            style={{ fontFamily: bodyFont, fontSize: "0.9375rem" }}
-          >
-            Check your AI traffic — it's free
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </a>
-        </div>
-
-        {/* Footer */}
-        <footer className="mt-12 flex flex-wrap items-center gap-x-4 gap-y-2">
-          <a
-            href="https://www.lovedby.ai"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-          >
-            lovedby.ai
-          </a>
-          <span className="text-border text-xs" aria-hidden="true">·</span>
-          <Link
-            to="/privacy"
-            className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-          >
-            Privacy
-          </Link>
-          <span className="text-border text-xs" aria-hidden="true">·</span>
-          <Link
-            to="/"
-            className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-          >
-            Home
-          </Link>
         </footer>
       </div>
     </div>
