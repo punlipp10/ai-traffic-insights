@@ -21,13 +21,13 @@ export const Route = createFileRoute("/faq")({
 
 interface FAQItem {
   q: string;
-  a: React.ReactNode;
+  a: () => React.ReactNode;
 }
 
 const FAQ_ITEMS: FAQItem[] = [
   {
     q: "Why did we build this?",
-    a: (
+    a: () => (
       <>
         <p>
           Because this data is usually buried inside GA4 — and most businesses
@@ -43,11 +43,11 @@ const FAQ_ITEMS: FAQItem[] = [
   },
   {
     q: "Does it cost anything?",
-    a: <p>Nope. You can run the check for free.</p>,
+    a: () => <p>Nope. You can run the check for free.</p>,
   },
   {
     q: "Is my data private?",
-    a: (
+    a: () => (
       <p>
         Yes. We only ask for read-only access so we can look at your GA4 data
         and generate your report. We do not edit your analytics, change
@@ -57,7 +57,7 @@ const FAQ_ITEMS: FAQItem[] = [
   },
   {
     q: "What if it says I'm not getting AI traffic yet?",
-    a: (
+    a: () => (
       <>
         <p>That's actually pretty normal.</p>
         <p>
@@ -70,7 +70,7 @@ const FAQ_ITEMS: FAQItem[] = [
   },
   {
     q: "Can you tell me which prompts or questions I'm ranking for?",
-    a: (
+    a: () => (
       <>
         <p>We wish. GA4 does not show that.</p>
         <p>
@@ -83,7 +83,7 @@ const FAQ_ITEMS: FAQItem[] = [
   },
   {
     q: "Does this change anything in my GA4 account?",
-    a: (
+    a: () => (
       <p>
         Not at all. This is read-only, so nothing gets changed or reconfigured.
       </p>
@@ -91,7 +91,7 @@ const FAQ_ITEMS: FAQItem[] = [
   },
   {
     q: "Why should I care if AI is sending me traffic?",
-    a: (
+    a: () => (
       <>
         <p>
           Because it can be an early signal that people are already discovering
@@ -107,7 +107,7 @@ const FAQ_ITEMS: FAQItem[] = [
   },
   {
     q: "Who made this?",
-    a: (
+    a: () => (
       <p>
         This little tool was made with love by{" "}
         <a
@@ -124,14 +124,22 @@ const FAQ_ITEMS: FAQItem[] = [
   },
 ];
 
-function AccordionItem({ item, index }: { item: FAQItem; index: number }) {
-  const [open, setOpen] = useState(false);
-
+function AccordionItem({
+  item,
+  index,
+  open,
+  onToggle,
+}: {
+  item: FAQItem;
+  index: number;
+  open: boolean;
+  onToggle: () => void;
+}) {
   return (
     <div className="border-t border-border">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={onToggle}
         aria-expanded={open}
         className="w-full flex items-start justify-between gap-4 py-5 text-left group"
       >
@@ -185,7 +193,7 @@ function AccordionItem({ item, index }: { item: FAQItem; index: number }) {
           className="pb-5 space-y-3 text-muted-foreground leading-relaxed"
           style={{ fontFamily: bodyFont, fontSize: "0.9375rem", maxWidth: "58ch" }}
         >
-          {item.a}
+          {item.a()}
         </div>
       </div>
     </div>
@@ -193,6 +201,11 @@ function AccordionItem({ item, index }: { item: FAQItem; index: number }) {
 }
 
 function FAQPage() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const toggle = (i: number) =>
+    setOpenIndex((prev) => (prev === i ? null : i));
+
   return (
     <div className="min-h-screen bg-background" style={{ fontFamily: bodyFont }}>
       <div className="max-w-xl mx-auto px-6 py-10 pb-16">
@@ -225,7 +238,13 @@ function FAQPage() {
         {/* Accordion */}
         <section aria-label="Frequently asked questions">
           {FAQ_ITEMS.map((item, i) => (
-            <AccordionItem key={i} item={item} index={i} />
+            <AccordionItem
+              key={i}
+              item={item}
+              index={i}
+              open={openIndex === i}
+              onToggle={() => toggle(i)}
+            />
           ))}
         </section>
 
