@@ -24,7 +24,7 @@ function LandingPage() {
       style={{ minHeight: "100dvh" }}
     >
       <main className="flex-1 flex flex-col justify-center px-7 py-8 md:px-14">
-        <article className="w-full max-w-sm mx-auto text-center md:max-w-5xl md:mx-0 md:text-left">
+        <article className="w-full text-left md:max-w-3xl md:mx-auto md:text-center">
 
             {/* H1 — mobile: 3 lines centered, desktop: 2 lines left-aligned */}
             <h1
@@ -37,7 +37,7 @@ function LandingPage() {
             >
               <span
                 className="block md:hidden"
-                style={{ fontSize: "clamp(3.4rem, 14vw, 5.5rem)" }}
+                style={{ fontSize: "clamp(4rem, 16vw, 5.5rem)" }}
               >
                 IS AI<br />SENDING ME<br />TRAFFIC?
               </span>
@@ -51,7 +51,7 @@ function LandingPage() {
 
             {/* Subtitle */}
             <p
-              className="text-muted-foreground mb-5 leading-relaxed mx-auto md:mx-0"
+              className="text-muted-foreground mb-5 leading-relaxed md:mx-auto"
               style={{ fontSize: "1rem", fontFamily: "'Figtree', sans-serif", maxWidth: "36ch" }}
             >
               Connect your Google Analytics. See if ChatGPT, Perplexity, Claude
@@ -59,7 +59,7 @@ function LandingPage() {
             </p>
 
             {/* AI source logos */}
-            <div className="flex items-center justify-center gap-4 mb-8 md:justify-start" role="img" aria-label="Supported AI tools: ChatGPT, Perplexity, Claude, Gemini, Grok, DeepSeek">
+            <div className="flex items-center justify-start gap-4 mb-8 md:justify-center" role="img" aria-label="Supported AI tools: ChatGPT, Perplexity, Claude, Gemini, Grok, DeepSeek">
               {[
                 { name: "ChatGPT", src: "/llm-logos/chatgpt.png" },
                 { name: "Perplexity", src: "/llm-logos/perplexity.png" },
@@ -84,7 +84,7 @@ function LandingPage() {
             {/* CTA */}
             <a
               href="/auth/google"
-              className="flex items-center justify-center gap-2.5 w-full max-w-sm mx-auto bg-primary text-primary-foreground font-semibold text-base rounded-xl transition-all hover:opacity-90 active:scale-[0.98] md:mx-0"
+              className="flex items-center justify-center gap-2.5 w-full max-w-sm bg-primary text-primary-foreground font-semibold text-base rounded-xl transition-all hover:opacity-90 active:scale-[0.98] md:mx-auto"
               style={{ paddingTop: "1rem", paddingBottom: "1rem", fontFamily: "'Figtree', sans-serif" }}
             >
               <GoogleIcon />
@@ -92,7 +92,7 @@ function LandingPage() {
             </a>
 
             {/* Microcopy */}
-            <div className="flex items-center justify-center gap-3 mt-3.5 md:justify-start">
+            <div className="flex items-center justify-start gap-3 mt-3.5 md:justify-center">
               {["Free", "Private", "Takes 30 seconds"].map((word, i) => (
                 <div key={word} className="flex items-center gap-3">
                   {i > 0 && <div className="w-1 h-1 rounded-full bg-border" />}
@@ -100,7 +100,7 @@ function LandingPage() {
                 </div>
               ))}
             </div>
-            <p className="text-center mt-3 text-xs text-muted-foreground/60 leading-relaxed" style={{ fontFamily: "'Figtree', sans-serif" }}>
+            <p className="text-left md:text-center mt-3 text-xs text-muted-foreground/60 leading-relaxed" style={{ fontFamily: "'Figtree', sans-serif" }}>
               Read-only access. We do not change your analytics setup.
             </p>
 
