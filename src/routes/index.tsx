@@ -37,23 +37,23 @@ function LandingPage() {
             >
               <span
                 className="block md:hidden"
-                style={{ fontSize: "clamp(4rem, 16vw, 5.5rem)" }}
+                style={{ fontSize: "clamp(3rem, 12vw, 5rem)" }}
               >
-                IS AI<br />SENDING ME<br />TRAFFIC?
+                IS AI SENDING<br />ME TRAFFIC?
               </span>
               <span
                 className="hidden md:block"
                 style={{ fontSize: "clamp(5.5rem, 8.5vw, 10rem)" }}
               >
-                <span style={{ display: "block" }}>IS AI SENDING</span>
-                <span style={{ display: "block", letterSpacing: "0.055em" }}>ME TRAFFIC?</span>
+                <span style={{ display: "block", letterSpacing: "0.05em" }}>IS AI SENDING</span>
+                <span style={{ display: "block", letterSpacing: "0.02em" }}>ME TRAFFIC?</span>
               </span>
             </h1>
 
             {/* Subtitle */}
             <p
               className="text-muted-foreground mb-5 leading-relaxed md:mx-auto"
-              style={{ fontSize: "1rem", fontFamily: "'Figtree', sans-serif", maxWidth: "36ch" }}
+              style={{ fontSize: "1rem", fontFamily: "'Figtree', sans-serif", maxWidth: "44ch" }}
             >
               Connect your Google Analytics. See if ChatGPT, Perplexity, Claude
               and others are already sending visitors to your website.
@@ -129,7 +129,7 @@ function LandingPage() {
           </div>
           <p className="text-xs text-muted-foreground/50" style={{ fontFamily: "'Figtree', sans-serif" }}>
             With{" "}
-            <span className="text-muted-foreground/50" aria-hidden="true">♥</span>
+            <span className="text-blue-500" aria-hidden="true">♥</span>
             <span className="sr-only">love</span>
             {" "}by{" "}
             <a
