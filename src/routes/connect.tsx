@@ -183,12 +183,18 @@ function ConnectPage() {
               displayName: string;
               accountName: string;
             }, idx: number) => (
-              <Link
+              <button
                 key={prop.propertyId}
-                to="/results"
-                search={{ propertyId: prop.propertyId, propertyName: prop.displayName }}
-                onClick={() => setLoadingProperty(prop.propertyId)}
-                className={`block w-full text-left px-5 py-4 hover:bg-muted/40 active:bg-muted/70 transition-colors ${
+                type="button"
+                disabled={loadingProperty !== null}
+                onClick={() => {
+                  setLoadingProperty(prop.propertyId);
+                  // Let React render the spinner first, then navigate
+                  setTimeout(() => {
+                    navigate({ to: "/results", search: { propertyId: prop.propertyId, propertyName: prop.displayName } });
+                  }, 0);
+                }}
+                className={`block w-full text-left px-5 py-4 hover:bg-muted/40 active:bg-muted/70 transition-colors disabled:cursor-default ${
                   idx < properties.length - 1 ? "border-b border-border/50" : ""
                 } ${loadingProperty === prop.propertyId ? "bg-muted/40" : ""}`}
               >
@@ -211,7 +217,7 @@ function ConnectPage() {
                     <span className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin flex-none" />
                   )}
                 </div>
-              </Link>
+              </button>
             )
           )}
         </div>

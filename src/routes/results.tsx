@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { fetchAITrafficReport } from "@/lib/ga4.functions";
 import { saveScan } from "@/lib/tracking.functions";
@@ -70,6 +70,8 @@ export const Route = createFileRoute("/results")({
     }
   },
   pendingComponent: LoadingState,
+  pendingMs: 0,
+  pendingMinMs: 300,
   component: ResultsPage,
 });
 
@@ -118,7 +120,8 @@ function LoadingState() {
 function ResultsPage() {
   const { report, error } = Route.useLoaderData();
   const { propertyId, propertyName, days } = Route.useSearch();
-  const [copied, setCopied] = useState<"summary" | null>(null);
+  const navigate = useNavigate();
+  const [copied, setCopied] = useState<"summary" | "error" | null>(null);
   const [loadingPeriod, setLoadingPeriod] = useState<number | null>(null);
 
   useEffect(() => {
@@ -179,7 +182,7 @@ function ResultsPage() {
   const shareText =
     report.state === "none"
       ? `I checked whether AI tools are sending traffic to my site (${report.propertyName}). Not yet — but it's worth keeping an eye on. Check yours: isaisendingmetraffic.com`
-      : `AI tools sent ${report.totalAISessions.toLocaleString()} visits to ${report.propertyName} in the last ${periodLabel}.${report.topSource ? ` Top source: ${report.topSource.label}.` : ""}${report.topPage ? ` Top page: ${formatPath(report.topPage.path)}.` : ""} Check yours: isaisendingmetraffic.com`;
+      : `AI tools sent ${report.totalAISessions.toLocaleString('en-US')} visits to ${report.propertyName} in the last ${periodLabel}.${report.topSource ? ` Top source: ${report.topSource.label}.` : ""}${report.topPage ? ` Top page: ${formatPath(report.topPage.path)}.` : ""} Check yours: isaisendingmetraffic.com`;
 
   const stateBar =
     report.state === "meaningful"
@@ -209,15 +212,20 @@ function ResultsPage() {
           {/* Period switcher */}
           <div className="flex items-center gap-1 bg-muted/60 rounded-lg p-0.5 print-hide">
             {PERIOD_OPTIONS.map((opt) => (
-              <Link
+              <button
                 key={opt.days}
-                to="/results"
-                search={{ propertyId, propertyName, days: opt.days }}
-                onClick={() => { if (opt.days !== days) setLoadingPeriod(opt.days); }}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors no-underline flex items-center gap-1 ${
+                type="button"
+                disabled={days === opt.days}
+                onClick={() => {
+                  if (opt.days !== days) {
+                    setLoadingPeriod(opt.days);
+                    navigate({ to: "/results", search: { propertyId, propertyName, days: opt.days } });
+                  }
+                }}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1 ${
                   days === opt.days
                     ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground cursor-pointer"
                 }`}
                 style={{ fontFamily: bodyFont }}
               >
@@ -225,7 +233,7 @@ function ResultsPage() {
                   <span className="w-2.5 h-2.5 rounded-full border border-current border-t-transparent animate-spin inline-block" />
                 )}
                 {opt.label}
-              </Link>
+              </button>
             ))}
           </div>
         </div>
@@ -330,41 +338,58 @@ function ResultsPage() {
               <button
                 type="button"
                 onClick={async () => {
-                  try {
-                    // Try modern clipboard API first
-                    await navigator.clipboard.writeText(shareText);
-                    setCopied("summary");
-                    setTimeout(() => setCopied(null), 2000);
-                  } catch {
+                  // 1. Web Share API — native mobile share sheet, most reliable on mobile
+                  if (typeof navigator.share === "function") {
                     try {
-                      // Fallback for iOS Safari and older browsers
-                      const el = document.createElement("textarea");
-                      el.value = shareText;
-                      el.setAttribute("readonly", "");
-                      el.style.position = "fixed";
-                      el.style.left = "-9999px";
-                      el.style.opacity = "0";
-                      document.body.appendChild(el);
-                      const range = document.createRange();
-                      range.selectNodeContents(el);
-                      const sel = window.getSelection();
-                      sel?.removeAllRanges();
-                      sel?.addRange(range);
-                      el.setSelectionRange(0, shareText.length);
-                      document.execCommand("copy");
-                      document.body.removeChild(el);
+                      await navigator.share({ title: "AI Traffic Report", text: shareText });
                       setCopied("summary");
                       setTimeout(() => setCopied(null), 2000);
-                    } catch { /* silent fail */ }
+                      return;
+                    } catch (e: unknown) {
+                      if ((e as Error).name === "AbortError") return; // user cancelled
+                    }
                   }
+                  // 2. Clipboard API
+                  if (navigator.clipboard?.writeText) {
+                    try {
+                      await navigator.clipboard.writeText(shareText);
+                      setCopied("summary");
+                      setTimeout(() => setCopied(null), 2000);
+                      return;
+                    } catch { /* fall through */ }
+                  }
+                  // 3. execCommand fallback
+                  try {
+                    const el = document.createElement("textarea");
+                    el.value = shareText;
+                    el.style.cssText = "position:fixed;left:-9999px;top:-9999px;opacity:0";
+                    document.body.appendChild(el);
+                    el.focus();
+                    el.select();
+                    el.setSelectionRange(0, shareText.length);
+                    const ok = document.execCommand("copy");
+                    document.body.removeChild(el);
+                    if (ok) {
+                      setCopied("summary");
+                      setTimeout(() => setCopied(null), 2000);
+                      return;
+                    }
+                  } catch { /* fall through */ }
+                  // All failed — show error
+                  setCopied("error");
+                  setTimeout(() => setCopied(null), 3000);
                 }}
                 className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors text-left flex items-center gap-3 cursor-pointer"
                 style={{ fontFamily: bodyFont }}
               >
-                <span className="text-base leading-none">{copied === "summary" ? "✓" : "📋"}</span>
+                <span className="text-base leading-none">{copied === "summary" ? "✓" : copied === "error" ? "⚠️" : "📋"}</span>
                 <div>
-                  <p className="font-medium text-sm">{copied === "summary" ? "Copied!" : "Copy summary"}</p>
-                  <p className="text-[11px] text-muted-foreground/60 mt-0.5">Share as text — includes your key numbers + site link</p>
+                  <p className="font-medium text-sm">
+                    {copied === "summary" ? "Copied!" : copied === "error" ? "Could not copy" : "Copy summary"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground/60 mt-0.5">
+                    {copied === "error" ? "Try long-pressing or right-clicking to copy" : "Share as text — includes your key numbers + site link"}
+                  </p>
                 </div>
               </button>
 
