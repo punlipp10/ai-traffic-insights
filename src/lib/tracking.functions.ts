@@ -63,18 +63,32 @@ export const saveScan = createServerFn({ method: "POST" })
         google_email: googleEmail,
         ga4_property_id: propertyId,
         ga4_property_name: report.propertyName,
+        domain: report.domain ?? null,
         ai_traffic_state: report.state,
+        // Sessions & users
         total_ai_sessions: report.totalAISessions,
         prev_ai_sessions: report.prevAISessions,
+        total_ai_users: report.totalAIUsers,
+        total_ai_new_users: report.totalAINewUsers,
         change_percent: report.changePercent,
-        top_source: report.topSource?.label ?? null,
-        top_page: report.topPage?.path ?? null,
-        pages_with_ai_traffic: report.pagesWithAITraffic,
+        // Date ranges
         days_analyzed: report.days,
-        source_breakdown: report.sourceBreakdown,
         date_range_start: report.dateRange.start,
         date_range_end: report.dateRange.end,
-        domain: report.domain ?? null,
+        prev_date_range_start: report.prevDateRange.start,
+        prev_date_range_end: report.prevDateRange.end,
+        // Top items (convenience columns)
+        top_source: report.topSource?.label ?? null,
+        top_source_sessions: report.topSource?.sessions ?? null,
+        top_page: report.topPage?.path ?? null,
+        top_page_sessions: report.topPage?.sessions ?? null,
+        pages_with_ai_traffic: report.pagesWithAITraffic,
+        // Rich JSONB columns
+        source_breakdown: report.sourceBreakdown,
+        top_sources: report.sourceBreakdown.slice(0, 6),
+        top_pages: report.topPages.slice(0, 6),
+        top_organic_pages: report.topOrganicPages.slice(0, 6),
+        daily_trend: report.dailyTrend,
       });
 
       if (error) {
