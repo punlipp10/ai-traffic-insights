@@ -38,7 +38,6 @@ function ConnectPage() {
   const { properties, error } = Route.useLoaderData();
   const navigate = useNavigate();
   const [disconnecting, setDisconnecting] = useState(false);
-  const [loadingProperty, setLoadingProperty] = useState<string | null>(null);
 
   const handleDisconnect = async () => {
     setDisconnecting(true);
@@ -183,17 +182,13 @@ function ConnectPage() {
               displayName: string;
               accountName: string;
             }, idx: number) => (
-              <button
+              <Link
                 key={prop.propertyId}
-                type="button"
-                onClick={() => {
-                  if (loadingProperty) return;
-                  setLoadingProperty(prop.propertyId);
-                  navigate({ to: "/results", search: { propertyId: prop.propertyId, propertyName: prop.displayName } });
-                }}
+                to="/results"
+                search={{ propertyId: prop.propertyId, propertyName: prop.displayName }}
                 className={`block w-full text-left px-5 py-4 hover:bg-muted/40 active:bg-muted/70 transition-colors ${
                   idx < properties.length - 1 ? "border-b border-border/50" : ""
-                } ${loadingProperty === prop.propertyId ? "bg-muted/40" : ""}`}
+                }`}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -210,11 +205,8 @@ function ConnectPage() {
                       {prop.accountName} · {prop.propertyId}
                     </p>
                   </div>
-                  {loadingProperty === prop.propertyId && (
-                    <span className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin flex-none" />
-                  )}
                 </div>
-              </button>
+              </Link>
             )
           )}
         </div>
