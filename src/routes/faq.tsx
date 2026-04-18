@@ -201,7 +201,7 @@ function FAQPage() {
               letterSpacing: "-0.01em",
             }}
           >
-            FAQ
+            Frequently asked questions
           </h1>
         </header>
 

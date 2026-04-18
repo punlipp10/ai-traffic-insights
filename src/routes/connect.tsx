@@ -216,7 +216,12 @@ function ConnectPage() {
               <a
                 key={prop.propertyId}
                 href={`/results?propertyId=${encodeURIComponent(prop.propertyId)}&propertyName=${encodeURIComponent(prop.displayName)}&days=30`}
-                onClick={() => setLoadingProperty(prop.propertyId)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setLoadingProperty(prop.propertyId);
+                  const url = e.currentTarget.href;
+                  setTimeout(() => { window.location.href = url; }, 50);
+                }}
                 className={`block w-full text-left px-5 py-4 hover:bg-muted/40 active:bg-muted/70 transition-colors ${
                   idx < properties.length - 1 ? "border-b border-border/50" : ""
                 } ${loadingProperty === prop.propertyId ? "bg-muted/30" : ""}`}

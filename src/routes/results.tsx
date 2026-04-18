@@ -219,7 +219,12 @@ function ResultsPage() {
                 <a
                   key={opt.days}
                   href={`/results?propertyId=${encodeURIComponent(propertyId)}&propertyName=${encodeURIComponent(propertyName)}&days=${opt.days}`}
-                  onClick={() => setLoadingPeriod(opt.days)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setLoadingPeriod(opt.days);
+                    const url = e.currentTarget.href;
+                    setTimeout(() => { window.location.href = url; }, 50);
+                  }}
                   className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   style={{ fontFamily: bodyFont }}
                 >
