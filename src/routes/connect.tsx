@@ -7,6 +7,20 @@ import type { GA4Property } from "@/lib/ai-sources";
 const displayFont = "'Barlow Condensed', sans-serif";
 const bodyFont = "'Figtree', sans-serif";
 
+function BouncingDots() {
+  return (
+    <span className="flex items-center gap-[3px]" aria-hidden="true">
+      {[0, 150, 300].map((delay) => (
+        <span
+          key={delay}
+          className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"
+          style={{ animationDelay: `${delay}ms`, animationDuration: "0.9s" }}
+        />
+      ))}
+    </span>
+  );
+}
+
 export const Route = createFileRoute("/connect")({
   head: () => ({
     meta: [
@@ -38,6 +52,7 @@ function ConnectPage() {
   const { properties, error } = Route.useLoaderData();
   const navigate = useNavigate();
   const [disconnecting, setDisconnecting] = useState(false);
+  const [loadingProperty, setLoadingProperty] = useState<string | null>(null);
 
   const handleDisconnect = async () => {
     setDisconnecting(true);
@@ -186,9 +201,10 @@ function ConnectPage() {
                 key={prop.propertyId}
                 to="/results"
                 search={{ propertyId: prop.propertyId, propertyName: prop.displayName }}
+                onClick={() => setLoadingProperty(prop.propertyId)}
                 className={`block w-full text-left px-5 py-4 hover:bg-muted/40 active:bg-muted/70 transition-colors ${
                   idx < properties.length - 1 ? "border-b border-border/50" : ""
-                }`}
+                } ${loadingProperty === prop.propertyId ? "bg-muted/30" : ""}`}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -205,6 +221,7 @@ function ConnectPage() {
                       {prop.accountName} · {prop.propertyId}
                     </p>
                   </div>
+                  {loadingProperty === prop.propertyId && <BouncingDots />}
                 </div>
               </Link>
             )
