@@ -26,9 +26,6 @@ function LandingPage() {
       <main className="flex-1 flex flex-col justify-center px-7 py-8">
         <article className="w-full max-w-md mx-auto text-center">
 
-          {/* Editorial rule */}
-          <div className="w-10 h-[3px] bg-primary mb-6 mx-auto" aria-hidden="true" />
-
             {/* H1 */}
             <h1
               className="font-bold uppercase text-foreground mb-4"
@@ -106,20 +103,6 @@ function LandingPage() {
 
       {/* Footer */}
       <footer className="px-7 pb-6 flex flex-col items-center gap-1.5">
-          <p className="text-xs text-muted-foreground/50" style={{ fontFamily: "'Figtree', sans-serif" }}>
-            With{" "}
-            <span className="text-blue-500" aria-hidden="true">♥</span>
-            <span className="sr-only">love</span>
-            {" "}by{" "}
-            <a
-              href="https://www.lovedby.ai"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:text-blue-600 transition-colors font-medium"
-            >
-              lovedby.ai
-            </a>
-          </p>
           <div className="flex items-center gap-3">
             <Link
               to="/faq"
@@ -137,6 +120,20 @@ function LandingPage() {
               Privacy
             </Link>
           </div>
+          <p className="text-xs text-muted-foreground/50" style={{ fontFamily: "'Figtree', sans-serif" }}>
+            With{" "}
+            <span className="text-blue-500" aria-hidden="true">♥</span>
+            <span className="sr-only">love</span>
+            {" "}by{" "}
+            <a
+              href="https://www.lovedby.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-600 transition-colors font-medium"
+            >
+              lovedby.ai
+            </a>
+          </p>
       </footer>
     </div>
   );

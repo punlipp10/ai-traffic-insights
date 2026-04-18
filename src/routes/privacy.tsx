@@ -110,9 +110,27 @@ function PrivacyPage() {
           </section>
         </div>
 
-        <footer className="mt-16 pt-6 border-t border-border text-center">
-          <p className="text-xs text-muted-foreground/60">
-            With <span className="text-blue-500">♥</span> by{"\ "}
+        <footer className="mt-16 pt-6 border-t border-border flex flex-col items-center gap-1.5">
+          <div className="flex items-center gap-3">
+            <Link
+              to="/faq"
+              className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            >
+              FAQ
+            </Link>
+            <span className="text-border text-xs" aria-hidden="true">·</span>
+            <Link
+              to="/privacy"
+              className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            >
+              Privacy
+            </Link>
+          </div>
+          <p className="text-xs text-muted-foreground/50">
+            With{" "}
+            <span className="text-blue-500" aria-hidden="true">♥</span>
+            <span className="sr-only">love</span>
+            {" "}by{" "}
             <a
               href="https://www.lovedby.ai"
               target="_blank"
