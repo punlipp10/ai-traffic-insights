@@ -20,29 +20,15 @@
 
   .layout {
     display: flex;
-    height: 100%;
-  }
-
-  /* Left side — title + logos */
-  .left {
-    flex: 1;
-    display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding: 56px 48px 56px 64px;
-    position: relative;
+    align-items: center;
+    height: 100%;
+    padding: 52px 64px 0;
   }
 
-  /* Green accent bar */
-  .left::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 40px;
-    bottom: 40px;
-    width: 5px;
-    background: #16a34a;
-    border-radius: 0 3px 3px 0;
+  /* Title area — centered */
+  .title-area {
+    text-align: center;
   }
 
   h1 {
@@ -51,7 +37,7 @@
     text-transform: uppercase;
     line-height: 0.88;
     letter-spacing: -0.02em;
-    font-size: 86px;
+    font-size: 120px;
     color: #09090b;
   }
 
@@ -61,8 +47,9 @@
   .logos {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-top: 32px;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 28px;
   }
 
   .logos img {
@@ -74,71 +61,72 @@
     opacity: 0.35;
   }
 
-  /* Right side — data card */
-  .right {
-    width: 440px;
-    flex-shrink: 0;
+  /* Data row — horizontal stats */
+  .data-row {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 56px 48px 56px 0;
-  }
-
-  .card {
+    align-items: center;
+    gap: 48px;
+    margin-top: 40px;
+    padding: 28px 48px;
     background: #f9fafb;
     border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    padding: 36px 32px;
+    border-radius: 14px;
   }
 
-  .big-number {
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px;
+  }
+
+  .stat-number {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 64px;
+    font-size: 48px;
     line-height: 1;
     color: #16a34a;
     letter-spacing: -0.02em;
   }
 
-  .big-label {
-    font-size: 15px;
+  .stat-label {
+    font-size: 14px;
     color: #6b7280;
     margin-top: 4px;
     font-weight: 500;
   }
 
-  .big-label .growth {
+  .stat-label .growth {
     color: #16a34a;
     font-weight: 700;
   }
 
-  .divider {
-    height: 1px;
+  .stat-divider {
+    width: 1px;
+    height: 48px;
     background: #e5e7eb;
-    margin: 24px 0;
   }
 
-  .source-row {
+  .source-stat {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    padding: 10px 0;
+    min-width: 90px;
   }
 
-  .source-row + .source-row {
-    border-top: 1px solid #f3f4f6;
-  }
-
-  .source-name {
-    font-size: 16px;
-    font-weight: 600;
-    color: #111;
-  }
-
-  .source-count {
-    font-size: 16px;
+  .source-stat .source-count {
+    font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
+    font-size: 36px;
+    line-height: 1;
     color: #111;
+  }
+
+  .source-stat .source-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-top: 4px;
   }
 
   /* Bottom bar */
@@ -150,7 +138,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 64px 28px;
+    padding: 0 64px 24px;
   }
 
   .url {
@@ -169,7 +157,7 @@
 </head>
 <body>
   <div class="layout">
-    <div class="left">
+    <div class="title-area">
       <h1>
         <span class="line1">IS AI SENDING</span>
         <span class="line2">ME TRAFFIC?</span>
@@ -183,26 +171,23 @@
         <img src="public/llm-logos/deepseek.png" alt="DeepSeek">
       </div>
     </div>
-    <div class="right">
-      <div class="card">
-        <div class="big-number">163</div>
-        <div class="big-label">
-          sessions from AI · 90 days
-          <span class="growth">(+21%)</span>
-        </div>
-        <div class="divider"></div>
-        <div class="source-row">
-          <span class="source-name">ChatGPT</span>
-          <span class="source-count">144</span>
-        </div>
-        <div class="source-row">
-          <span class="source-name">Gemini</span>
-          <span class="source-count">9</span>
-        </div>
-        <div class="source-row">
-          <span class="source-name">Claude</span>
-          <span class="source-count">6</span>
-        </div>
+    <div class="data-row">
+      <div class="stat">
+        <span class="stat-number">163</span>
+        <span class="stat-label">AI sessions · 90d <span class="growth">(+21%)</span></span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="source-stat">
+        <span class="source-count">144</span>
+        <span class="source-name">ChatGPT</span>
+      </div>
+      <div class="source-stat">
+        <span class="source-count">9</span>
+        <span class="source-name">Gemini</span>
+      </div>
+      <div class="source-stat">
+        <span class="source-count">6</span>
+        <span class="source-name">Claude</span>
       </div>
     </div>
   </div>
