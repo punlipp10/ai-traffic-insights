@@ -206,7 +206,7 @@ function AccordionItem({ item, index }: { item: FAQItem; index: number }) {
           transition: "grid-template-rows 0.28s cubic-bezier(0.4,0,0.2,1)",
         }}
       >
-        <div style={{ overflow: "hidden" }}>
+        <div style={{ overflow: "hidden", minHeight: 0 }}>
           <div
             className="pb-5 space-y-3 text-muted-foreground leading-relaxed"
             style={{ fontFamily: bodyFont, fontSize: "0.9375rem", maxWidth: "58ch" }}
