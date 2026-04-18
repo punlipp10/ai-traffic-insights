@@ -10,31 +10,55 @@ export interface AISourceMatch {
 }
 
 const KNOWN_AI_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
+  // OpenAI / ChatGPT
   { pattern: /chatgpt\.com/i, label: "ChatGPT" },
   { pattern: /chat\.openai\.com/i, label: "ChatGPT" },
   { pattern: /openai\.com/i, label: "OpenAI" },
-  { pattern: /perplexity\.ai/i, label: "Perplexity" },
-  { pattern: /claude\.ai/i, label: "Claude" },
-  { pattern: /anthropic\.com/i, label: "Anthropic" },
+  // Google
   { pattern: /gemini\.google\.com/i, label: "Gemini" },
   { pattern: /bard\.google\.com/i, label: "Google Bard" },
-  { pattern: /copilot\.microsoft\.com/i, label: "Microsoft Copilot" },
-  { pattern: /poe\.com/i, label: "Poe" },
-  { pattern: /you\.com/i, label: "You.com" },
-  { pattern: /phind\.com/i, label: "Phind" },
-  { pattern: /writesonic\.com/i, label: "Writesonic" },
-  { pattern: /jasper\.ai/i, label: "Jasper" },
-  { pattern: /meta\.ai/i, label: "Meta AI" },
-  { pattern: /huggingface\.co/i, label: "Hugging Face" },
+  // Anthropic
+  { pattern: /claude\.ai/i, label: "Claude" },
+  { pattern: /anthropic\.com/i, label: "Anthropic" },
+  // Perplexity
+  { pattern: /perplexity\.ai/i, label: "Perplexity" },
+  // xAI
   { pattern: /grok\.com/i, label: "Grok" },
   { pattern: /x\.ai/i, label: "Grok" },
+  // DeepSeek
   { pattern: /deepseek\.com/i, label: "DeepSeek" },
-  { pattern: /chat\.mistral\.ai/i, label: "Mistral" },
+  // Mistral
+  { pattern: /mistral\.ai/i, label: "Mistral" },
+  // Microsoft
+  { pattern: /copilot\.microsoft\.com/i, label: "Microsoft Copilot" },
+  // Meta
+  { pattern: /meta\.ai/i, label: "Meta AI" },
+  // AI search engines
+  { pattern: /kagi\.com/i, label: "Kagi" },
+  { pattern: /you\.com/i, label: "You.com" },
+  { pattern: /phind\.com/i, label: "Phind" },
+  { pattern: /andisearch\.com/i, label: "Andi" },
+  { pattern: /iask\.ai/i, label: "iAsk" },
+  { pattern: /exa\.ai/i, label: "Exa" },
+  { pattern: /consensus\.app/i, label: "Consensus" },
+  // Aggregators & other AI chat
+  { pattern: /poe\.com/i, label: "Poe" },
+  { pattern: /huggingface\.co/i, label: "Hugging Face" },
+  { pattern: /hf\.co/i, label: "Hugging Face" },
+  { pattern: /pi\.ai/i, label: "Pi" },
+  { pattern: /inflection\.ai/i, label: "Pi" },
+  { pattern: /coral\.cohere\.com/i, label: "Cohere" },
+  { pattern: /cohere\.com/i, label: "Cohere" },
+  // AI writing tools
+  { pattern: /writesonic\.com/i, label: "Writesonic" },
+  { pattern: /jasper\.ai/i, label: "Jasper" },
 ];
 
 const POSSIBLE_AI_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
   { pattern: /edgeservices\.bing\.com/i, label: "Bing (AI)" },
   { pattern: /copilot\.bing\.com/i, label: "Bing Copilot" },
+  { pattern: /search\.brave\.com/i, label: "Brave (AI)" },
+  { pattern: /arc\.net/i, label: "Arc Search" },
 ];
 
 export function matchAISource(source: string): AISourceMatch | null {
