@@ -45,7 +45,8 @@ function LandingPage() {
                 className="hidden md:block"
                 style={{ fontSize: "clamp(5.5rem, 8.5vw, 10rem)" }}
               >
-                IS AI SENDING<br />ME TRAFFIC?
+                <span style={{ display: "block" }}>IS AI SENDING</span>
+                <span style={{ display: "block", letterSpacing: "0.055em" }}>ME TRAFFIC?</span>
               </span>
             </h1>
 
