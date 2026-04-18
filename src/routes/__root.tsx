@@ -95,14 +95,6 @@ export const Route = createRootRoute({
         },
         {
           "@type": "Question",
-          name: "Is my data private?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes. We only ask for read-only access so we can look at your GA4 data and generate your report. We do not edit your analytics, change settings, or touch your site.",
-          },
-        },
-        {
-          "@type": "Question",
           name: "What does AI traffic mean?",
           acceptedAnswer: {
             "@type": "Answer",

@@ -14,6 +14,73 @@ export const Route = createFileRoute("/faq")({
       },
     ],
     links: [{ rel: "canonical", href: "https://isaisendingmetraffic.com/faq" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "Why did we build this?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Because businesses want to know if they are getting traffic from AI search but this data is usually buried inside Google Analytics (GA4), and most businesses are not opening analytics reports, messing with filters, and trying to decode weird source names just to answer one basic question: Is AI already sending people to my site?",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Does it cost anything?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Nope. You can run the check for free.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "What if it says I'm not getting AI traffic yet?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "That's actually pretty normal. A lot of businesses are still very early here. A low number does not mean this channel is not important. It usually just means the traffic is still small, hard to spot, or has room to grow.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Can you tell me which prompts or questions I'm ranking for?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "We wish. GA4 does not show that. This tool can help show whether AI tools are sending traffic to your website, but it cannot show the exact prompt, question, or chat that led someone there.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Does this change anything in my GA4 account?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Not at all. This is read-only, so nothing gets changed or reconfigured.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Why should I care if AI is sending me traffic?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Because it can be an early signal that people are already discovering your business in new ways. Even a small amount of AI traffic can be interesting. It may mean your site is starting to show up in the tools people use to research, compare options, and make decisions.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Who made this?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "This little tool was made with love by LovedByAI (https://www.lovedby.ai).",
+              },
+            },
+          ],
+        }),
+      },
+    ],
   }),
   component: FAQPage,
 });
@@ -38,16 +105,6 @@ const FAQ_ITEMS: FAQItem[] = [
   {
     q: "Does it cost anything?",
     a: () => <p>Nope. You can run the check for free.</p>,
-  },
-  {
-    q: "Is my data private?",
-    a: () => (
-      <p>
-        Yes. We only ask for read-only access so we can look at your GA4 data
-        and generate your report. We do not edit your analytics, change
-        settings, or touch your site.
-      </p>
-    ),
   },
   {
     q: "What if it says I'm not getting AI traffic yet?",

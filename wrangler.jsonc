@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "isaisendingmetraffic",
+  "name": "ai-traffic-insights",
   "main": "dist/server/server.js",
   "assets": {
     "directory": "dist/client"

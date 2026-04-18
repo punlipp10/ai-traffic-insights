@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { fetchAITrafficReport } from "@/lib/ga4.functions";
 import { saveScan } from "@/lib/tracking.functions";
@@ -120,13 +120,8 @@ function LoadingState() {
 function ResultsPage() {
   const { report, error } = Route.useLoaderData();
   const { propertyId, propertyName, days } = Route.useSearch();
-  const navigate = useNavigate();
   const [copied, setCopied] = useState<"summary" | "error" | null>(null);
   const [loadingPeriod, setLoadingPeriod] = useState<number | null>(null);
-
-  useEffect(() => {
-    setLoadingPeriod(null);
-  }, [days]);
 
   if (error || !report) {
     return (
@@ -211,31 +206,46 @@ function ResultsPage() {
 
           {/* Period switcher */}
           <div className="flex items-center gap-1 bg-muted/60 rounded-lg p-0.5 print-hide">
-            {PERIOD_OPTIONS.map((opt) => (
-              <button
-                key={opt.days}
-                type="button"
-                disabled={days === opt.days}
-                onClick={() => {
-                  if (opt.days !== days) {
-                    setLoadingPeriod(opt.days);
-                    navigate({ to: "/results", search: { propertyId, propertyName, days: opt.days } });
-                  }
-                }}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1 ${
-                  days === opt.days
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground cursor-pointer"
-                }`}
-                style={{ fontFamily: bodyFont }}
-              >
-                {loadingPeriod === opt.days && (
-                  <span className="w-2.5 h-2.5 rounded-full border-2 border-primary border-t-transparent animate-spin inline-block flex-none" />
-                )}
-                {opt.label}
-              </button>
-            ))}
+            {PERIOD_OPTIONS.map((opt) =>
+              opt.days === days ? (
+                <span
+                  key={opt.days}
+                  className="px-2.5 py-1 rounded-md text-xs font-medium bg-card text-foreground shadow-sm"
+                  style={{ fontFamily: bodyFont }}
+                >
+                  {opt.label}
+                </span>
+              ) : (
+                <a
+                  key={opt.days}
+                  href={`/results?propertyId=${encodeURIComponent(propertyId)}&propertyName=${encodeURIComponent(propertyName)}&days=${opt.days}`}
+                  onClick={() => setLoadingPeriod(opt.days)}
+                  className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  style={{ fontFamily: bodyFont }}
+                >
+                  {opt.label}
+                </a>
+              )
+            )}
           </div>
+
+          {/* Full-screen loading overlay — shown immediately on period click */}
+          {loadingPeriod !== null && (
+            <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-[2px] flex flex-col items-center justify-center gap-4">
+              <div className="flex gap-1.5">
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="w-2 h-2 rounded-full bg-primary animate-bounce"
+                    style={{ animationDelay: `${i * 0.15}s` }}
+                  />
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground" style={{ fontFamily: bodyFont }}>
+                Loading {loadingPeriod === 7 ? "7 days" : loadingPeriod === 365 ? "12 months" : `${loadingPeriod} days`}...
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Desktop two-column grid */}

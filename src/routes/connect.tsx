@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { listGA4Properties } from "@/lib/ga4.functions";
 import { logoutGoogle } from "@/lib/auth.functions";
@@ -50,7 +50,6 @@ export const Route = createFileRoute("/connect")({
 
 function ConnectPage() {
   const { properties, error } = Route.useLoaderData();
-  const navigate = useNavigate();
   const [disconnecting, setDisconnecting] = useState(false);
   const [loadingProperty, setLoadingProperty] = useState<string | null>(null);
 
@@ -61,7 +60,7 @@ function ConnectPage() {
     } catch {
       // best-effort
     }
-    navigate({ to: "/" });
+    window.location.href = "/";
   };
 
   if (error === "not_authenticated") {
@@ -155,6 +154,23 @@ function ConnectPage() {
   // If only one property, go straight to results
   return (
     <div className="min-h-screen bg-background">
+      {/* Full-screen loading overlay when a property is selected */}
+      {loadingProperty !== null && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-[2px] flex flex-col items-center justify-center gap-4">
+          <div className="flex gap-1.5">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="w-2 h-2 rounded-full bg-primary animate-bounce"
+                style={{ animationDelay: `${i * 0.15}s` }}
+              />
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground" style={{ fontFamily: bodyFont }}>
+            Loading your report...
+          </p>
+        </div>
+      )}
       <div className="max-w-2xl mx-auto px-5 py-10 md:px-10 md:py-16">
 
         {/* Header */}
