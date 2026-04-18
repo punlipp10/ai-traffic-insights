@@ -43,7 +43,7 @@ function LandingPage() {
               </span>
               <span
                 className="hidden md:block"
-                style={{ fontSize: "clamp(5.5rem, 8.5vw, 10rem)" }}
+                style={{ fontSize: "clamp(4.5rem, 7vw, 8rem)" }}
               >
                 <span style={{ display: "block", letterSpacing: "0.05em" }}>IS AI SENDING</span>
                 <span style={{ display: "block", letterSpacing: "0.02em" }}>ME TRAFFIC?</span>
