@@ -156,10 +156,20 @@
     print-color-adjust: exact;
   }
 
+  /* Kill min-height and excess spacing that cause a blank second page */
+  .min-h-screen {
+    min-height: auto !important;
+  }
+
   .max-w-5xl {
     max-width: 100%;
     padding: 0 1cm;
   }
+
+  .mb-6 { margin-bottom: 0.3cm !important; }
+  .mb-8 { margin-bottom: 0.4cm !important; }
+  .mb-10 { margin-bottom: 0 !important; }
+  .py-10, .md\\:py-14 { padding-top: 0.5cm !important; padding-bottom: 0 !important; }
 
   .rounded-2xl,
   .rounded-xl {
@@ -178,8 +188,8 @@
     font-size: 9pt;
     color: #888;
     text-align: center;
-    margin-top: 1cm;
-    padding-top: 0.5cm;
+    margin-top: 0.5cm;
+    padding-top: 0.3cm;
     border-top: 1px solid #e5e7eb;
   }
 }
