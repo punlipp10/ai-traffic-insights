@@ -353,6 +353,21 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
     if (totalAISessions >= 10) state = "meaningful";
     else if (totalAISessions > 0) state = "low";
 
+    // Fetch property domain from GA4 Admin API
+    let domain: string | null = null;
+    try {
+      const propDetails = await fetch(
+        `https://analyticsadmin.googleapis.com/v1beta/properties/${propertyId}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      if (propDetails.ok) {
+        const pd = await propDetails.json();
+        domain = pd.websiteUri ?? null;
+      }
+    } catch {
+      // non-fatal
+    }
+
     const report: AITrafficReport = {
       propertyId,
       propertyName: data.propertyName || propertyId,
@@ -375,6 +390,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
       dailyTrend,
       topOrganicPages,
       state,
+      domain,
     };
 
     return { report };

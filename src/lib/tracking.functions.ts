@@ -44,6 +44,21 @@ export const saveScan = createServerFn({ method: "POST" })
 
       const { report, propertyId } = data;
 
+      // Skip re-insert if same property + period already scanned within 7 days
+      const { data: existing } = await supabase
+        .from("aisendingme_scans")
+        .select("id")
+        .eq("ga4_property_id", propertyId)
+        .eq("days_analyzed", report.days)
+        .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .limit(1)
+        .maybeSingle();
+
+      if (existing) {
+        console.log("[tracking] Skipping duplicate scan (cached within 7 days)");
+        return;
+      }
+
       const { error } = await supabase.from("aisendingme_scans").insert({
         google_email: googleEmail,
         ga4_property_id: propertyId,
@@ -59,6 +74,7 @@ export const saveScan = createServerFn({ method: "POST" })
         source_breakdown: report.sourceBreakdown,
         date_range_start: report.dateRange.start,
         date_range_end: report.dateRange.end,
+        domain: report.domain ?? null,
       });
 
       if (error) {
