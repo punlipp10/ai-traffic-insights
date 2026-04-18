@@ -168,7 +168,7 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://isaisendingmetraffic.com" },
       { property: "og:site_name", content: "Is AI Sending Me Traffic?" },
-      { property: "og:image", content: "https://isaisendingmetraffic.com/isaisendingmetraffic-logo.png" },
+      { property: "og:image", content: "https://isaisendingmetraffic.com/og-image.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:locale", content: "en_US" },
@@ -182,7 +182,7 @@ export const Route = createRootRoute({
         content:
           "Connect your Google Analytics and instantly see if AI tools are sending you traffic. Free, private, read-only.",
       },
-      { name: "twitter:image", content: "https://isaisendingmetraffic.com/isaisendingmetraffic-logo.png" },
+      { name: "twitter:image", content: "https://isaisendingmetraffic.com/og-image.png" },
       { name: "twitter:site", content: "@lovedbyai2" },
       { name: "twitter:creator", content: "@lovedbyai2" },
       { name: "robots", content: "index, follow" },
