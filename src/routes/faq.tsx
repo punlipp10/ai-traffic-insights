@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
 
 const displayFont = "'Barlow Condensed', sans-serif";
 const bodyFont = "'Figtree', sans-serif";
@@ -124,88 +123,7 @@ const FAQ_ITEMS: FAQItem[] = [
   },
 ];
 
-function AccordionItem({
-  item,
-  index,
-  open,
-  onToggle,
-}: {
-  item: FAQItem;
-  index: number;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div className="border-t border-border">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className="w-full flex items-start justify-between gap-4 py-5 text-left group"
-      >
-        <span
-          className="font-semibold text-foreground leading-snug transition-colors group-hover:text-primary"
-          style={{
-            fontFamily: bodyFont,
-            fontSize: "1rem",
-          }}
-        >
-          <span
-            className="text-primary/40 font-normal tabular-nums mr-2.5 select-none"
-            style={{ fontFamily: displayFont, fontSize: "0.85rem", letterSpacing: "0.04em" }}
-            aria-hidden="true"
-          >
-            {String(index + 1).padStart(2, "0")}
-          </span>
-          {item.q}
-        </span>
-
-        {/* Indicator */}
-        <span
-          className="flex-none mt-0.5 w-5 h-5 rounded-full border border-border flex items-center justify-center transition-all duration-200 group-hover:border-primary group-hover:text-primary"
-          style={{ color: open ? "var(--color-primary)" : undefined, borderColor: open ? "var(--color-primary)" : undefined }}
-          aria-hidden="true"
-        >
-          <svg
-            width="10"
-            height="10"
-            viewBox="0 0 10 10"
-            fill="none"
-            style={{
-              transform: open ? "rotate(45deg)" : "rotate(0deg)",
-              transition: "transform 0.22s cubic-bezier(0.4,0,0.2,1)",
-            }}
-          >
-            <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </span>
-      </button>
-
-      {/* Expand/collapse */}
-      <div
-        style={{
-          overflow: "hidden",
-          maxHeight: open ? "600px" : "0px",
-          transition: "max-height 0.28s cubic-bezier(0.4,0,0.2,1)",
-        }}
-      >
-        <div
-          className="pb-5 space-y-3 text-muted-foreground leading-relaxed"
-          style={{ fontFamily: bodyFont, fontSize: "0.9375rem", maxWidth: "58ch" }}
-        >
-          {item.a()}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function FAQPage() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  const toggle = (i: number) =>
-    setOpenIndex((prev) => (prev === i ? null : i));
-
   return (
     <div className="min-h-screen bg-background" style={{ fontFamily: bodyFont }}>
       <div className="max-w-xl mx-auto px-6 py-10 pb-16">
@@ -238,13 +156,42 @@ function FAQPage() {
         {/* Accordion */}
         <section aria-label="Frequently asked questions">
           {FAQ_ITEMS.map((item, i) => (
-            <AccordionItem
-              key={i}
-              item={item}
-              index={i}
-              open={openIndex === i}
-              onToggle={() => toggle(i)}
-            />
+            <details key={i} className="border-t border-border group">
+              <summary
+                className="flex items-start justify-between gap-4 py-5 cursor-pointer list-none [&::-webkit-details-marker]:hidden"
+              >
+                <span
+                  className="font-semibold text-foreground leading-snug transition-colors group-hover:text-primary"
+                  style={{ fontFamily: bodyFont, fontSize: "1rem" }}
+                >
+                  <span
+                    className="text-primary/40 font-normal tabular-nums mr-2.5 select-none"
+                    style={{ fontFamily: displayFont, fontSize: "0.85rem", letterSpacing: "0.04em" }}
+                    aria-hidden="true"
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  {item.q}
+                </span>
+                <span
+                  className="flex-none mt-0.5 w-5 h-5 rounded-full border border-border flex items-center justify-center transition-all duration-200 group-hover:border-primary group-hover:text-primary group-open:border-primary group-open:text-primary"
+                  aria-hidden="true"
+                >
+                  <svg
+                    width="10" height="10" viewBox="0 0 10 10" fill="none"
+                    className="transition-transform duration-200 group-open:rotate-45"
+                  >
+                    <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </span>
+              </summary>
+              <div
+                className="pb-5 space-y-3 text-muted-foreground leading-relaxed"
+                style={{ fontFamily: bodyFont, fontSize: "0.9375rem", maxWidth: "58ch" }}
+              >
+                {item.a()}
+              </div>
+            </details>
           ))}
         </section>
 
