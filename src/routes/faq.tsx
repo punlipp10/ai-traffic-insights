@@ -17,7 +17,8 @@ export const Route = createFileRoute("/faq")({
     links: [{ rel: "canonical", href: "https://isaisendingmetraffic.com/faq" }],
     scripts: [
       {
-        type: "application/ld+json",
+        tag: "script" as const,
+        attrs: { type: "application/ld+json" },
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "FAQPage",
