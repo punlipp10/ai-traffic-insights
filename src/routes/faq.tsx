@@ -209,7 +209,7 @@ function FAQPage() {
           </div>
           <p className="text-xs text-muted-foreground/50">
             With{" "}
-            <span className="text-muted-foreground/50" aria-hidden="true">♥</span>
+            <span className="text-blue-500" aria-hidden="true">♥</span>
             <span className="sr-only">love</span>
             {" "}by{" "}
             <a

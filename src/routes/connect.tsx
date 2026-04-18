@@ -227,7 +227,7 @@ function ConnectPage() {
             className="text-[11px] text-muted-foreground/40"
             style={{ fontFamily: bodyFont }}
           >
-          With <span className="text-muted-foreground/40">♥</span>{" "}by{" "}
+          With <span className="text-blue-500">♥</span>{" "}by{" "}
             <a
               href="https://www.lovedby.ai"
               target="_blank"
