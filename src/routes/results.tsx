@@ -181,7 +181,7 @@ function ResultsPage() {
 
   const shareText =
     report.state === "none"
-      ? `I checked whether AI tools are sending traffic to my site (${report.propertyName}). Not yet — but it's worth keeping an eye on. Check yours: isaisendingmetraffic.com`
+      ? `I checked whether AI tools are sending traffic to my site (${report.propertyName}). Not yet, but it's worth keeping an eye on. Check yours: isaisendingmetraffic.com`
       : `AI tools sent ${report.totalAISessions.toLocaleString('en-US')} visits to ${report.propertyName} in the last ${periodLabel}.${report.topSource ? ` Top source: ${report.topSource.label}.` : ""}${report.topPage ? ` Top page: ${formatPath(report.topPage.path)}.` : ""} Check yours: isaisendingmetraffic.com`;
 
   const stateBar =
@@ -388,7 +388,7 @@ function ResultsPage() {
                     {copied === "summary" ? "Copied!" : copied === "error" ? "Could not copy" : "Copy summary"}
                   </p>
                   <p className="text-[11px] text-muted-foreground/60 mt-0.5">
-                    {copied === "error" ? "Try long-pressing or right-clicking to copy" : "Share as text — includes your key numbers + site link"}
+                    {copied === "error" ? "Try long-pressing or right-clicking to copy" : "Share as text, includes your key numbers + site link"}
                   </p>
                 </div>
               </button>
@@ -783,7 +783,7 @@ function ZeroState({
             style={{ fontFamily: bodyFont }}
           >
             AI traffic is growing quickly but still represents a small share
-            of total visits for most businesses. It's also often undercounted —
+            of total visits for most businesses. It's also often undercounted,
             some AI-referred visits aren't clearly attributed in Google Analytics.
           </p>
         </div>
