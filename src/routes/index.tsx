@@ -128,16 +128,16 @@ function LandingPage() {
           </div>
           <p className="text-xs text-muted-foreground/50" style={{ fontFamily: "'Figtree', sans-serif" }}>
             With{" "}
-            <span className="text-blue-500" aria-hidden="true">♥</span>
+            <span className="text-muted-foreground/50" aria-hidden="true">♥</span>
             <span className="sr-only">love</span>
             {" "}by{" "}
             <a
               href="https://www.lovedby.ai"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-500 hover:text-blue-600 transition-colors font-medium"
+              className="text-muted-foreground/50 hover:text-foreground transition-colors font-medium"
             >
-              lovedby.ai
+              LovedByAI
             </a>
           </p>
       </footer>
