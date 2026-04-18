@@ -87,7 +87,7 @@ function LandingPage() {
 
             {/* Microcopy */}
             <div className="flex items-center justify-center gap-3 mt-3.5">
-              {["Free", "Private", "Quick"].map((word, i) => (
+              {["Free", "Private", "30 seconds"].map((word, i) => (
                 <div key={word} className="flex items-center gap-3">
                   {i > 0 && <div className="w-1 h-1 rounded-full bg-border" />}
                   <span className="text-xs text-muted-foreground" style={{ fontFamily: "'Figtree', sans-serif" }}>{word}</span>
