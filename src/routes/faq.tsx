@@ -26,23 +26,13 @@ interface FAQItem {
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "What is this site?",
-    a: (
-      <p>
-        It's a simple way to check whether AI tools like ChatGPT are already
-        sending traffic to your website.
-      </p>
-    ),
-  },
-  {
-    q: "Why did we build it?",
+    q: "Why did we build this?",
     a: (
       <>
-        <p>Because this data is usually buried inside GA4.</p>
         <p>
-          Most small business owners are not opening analytics reports, messing
-          with filters, and trying to decode weird source names just to answer
-          one basic question:
+          Because this data is usually buried inside GA4 — and most businesses
+          are not opening analytics reports, messing with filters, and trying to
+          decode weird source names just to answer one basic question:
         </p>
         <p>
           <strong>Is AI already sending people to my site?</strong>
@@ -66,27 +56,12 @@ const FAQ_ITEMS: FAQItem[] = [
     ),
   },
   {
-    q: 'What does "AI traffic" mean here?',
-    a: (
-      <>
-        <p>
-          It means visits to your site that appear to have come from AI tools
-          and assistants, based on the referral data GA4 gives us.
-        </p>
-        <p>
-          It's helpful, but it's not perfect. Some AI-driven visits may still
-          be hidden, unattributed, or grouped somewhere else.
-        </p>
-      </>
-    ),
-  },
-  {
     q: "What if it says I'm not getting AI traffic yet?",
     a: (
       <>
         <p>That's actually pretty normal.</p>
         <p>
-          A lot of small businesses are still very early here. A low number does
+          A lot of businesses are still very early here. A low number does
           not mean this channel is not important. It usually just means the
           traffic is still small, hard to spot, or has room to grow.
         </p>
