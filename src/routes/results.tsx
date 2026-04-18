@@ -193,23 +193,6 @@ function ResultsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Period-change loading overlay */}
-      {loadingPeriod !== null && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-sm">
-          <span className="flex items-center gap-[5px]">
-            {[0, 150, 300, 450].map((delay) => (
-              <span
-                key={delay}
-                className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce"
-                style={{ animationDelay: `${delay}ms`, animationDuration: "0.9s" }}
-              />
-            ))}
-          </span>
-          <p className="text-xs text-muted-foreground" style={{ fontFamily: bodyFont }}>
-            Loading {PERIOD_OPTIONS.find(o => o.days === loadingPeriod)?.label ?? `${loadingPeriod}d`} report…
-          </p>
-        </div>
-      )}
       <div className="max-w-5xl mx-auto px-5 py-10 md:px-10 md:py-14">
 
         {/* Top bar: breadcrumb + period switcher */}
@@ -232,20 +215,23 @@ function ResultsPage() {
               <button
                 key={opt.days}
                 type="button"
-                disabled={days === opt.days || loadingPeriod !== null}
+                disabled={days === opt.days}
                 onClick={() => {
                   if (opt.days !== days) {
                     setLoadingPeriod(opt.days);
                     navigate({ to: "/results", search: { propertyId, propertyName, days: opt.days } });
                   }
                 }}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1 ${
                   days === opt.days
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground cursor-pointer"
-                } ${loadingPeriod === opt.days ? "!text-primary" : ""}`}
+                }`}
                 style={{ fontFamily: bodyFont }}
               >
+                {loadingPeriod === opt.days && (
+                  <span className="w-2.5 h-2.5 rounded-full border-2 border-primary border-t-transparent animate-spin inline-block flex-none" />
+                )}
                 {opt.label}
               </button>
             ))}
