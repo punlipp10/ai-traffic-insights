@@ -470,6 +470,9 @@ function ResultsPage() {
           </div>
         </div>
 
+        {/* Print-only footer — hidden on screen, visible in print */}
+        <div className="print-footer" aria-hidden="true" />
+
       </div>
     </div>
   );
