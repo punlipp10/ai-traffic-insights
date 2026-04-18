@@ -774,8 +774,8 @@ function TrendChart({
           return (
             <div
               key={d.date}
-              className="flex-1 bg-primary/70 rounded-t hover:bg-primary transition-colors"
-              style={{ height: `${Math.max(height, 2)}%` }}
+              className={`flex-1 rounded-t transition-colors ${d.sessions > 0 ? "bg-primary/70 hover:bg-primary" : "bg-transparent"}`}
+              style={{ height: d.sessions > 0 ? `${Math.max(height, 4)}%` : "0%" }}
               title={`${d.date.slice(4, 6)}/${d.date.slice(6, 8)}: ${d.sessions} sessions`}
             />
           );

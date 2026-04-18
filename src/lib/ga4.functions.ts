@@ -217,12 +217,22 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
         limit: String(days + 1),
       });
 
-      dailyTrend = (trendReport.rows || []).map(
+      const sparseData = (trendReport.rows || []).map(
         (row: { dimensionValues?: Array<{ value?: string }>; metricValues?: Array<{ value?: string }> }) => ({
           date: row.dimensionValues?.[0]?.value || "",
           sessions: parseInt(row.metricValues?.[0]?.value || "0"),
         })
       );
+
+      // Fill in ALL dates in the range so chart is proportional
+      const sessionsByDate = new Map(sparseData.map((d) => [d.date, d.sessions]));
+      const cursor = new Date(periodStart);
+      cursor.setDate(cursor.getDate() + 1); // start day after period start
+      while (cursor <= today) {
+        const key = cursor.toISOString().split("T")[0].replace(/-/g, "");
+        dailyTrend.push({ date: key, sessions: sessionsByDate.get(key) || 0 });
+        cursor.setDate(cursor.getDate() + 1);
+      }
 
       // Report 3: Top landing pages for AI sources (filter out (not set))
       const pagesReport = await runGA4Report(accessToken, propertyId, {
