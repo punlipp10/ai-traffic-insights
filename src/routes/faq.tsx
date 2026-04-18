@@ -28,9 +28,10 @@ const FAQ_ITEMS: FAQItem[] = [
     q: "Why did we build this?",
     a: () => (
       <p>
-        Because this data is usually buried inside Google Analytics (GA4), and most businesses
-        are not opening analytics reports, messing with filters, and trying to decode weird source
-        names just to answer one basic question: "Is AI already sending people to my site?"
+        Because businesses want to know if they are getting traffic from AI search but this data
+        is usually buried inside Google Analytics (GA4), and most businesses are not opening
+        analytics reports, messing with filters, and trying to decode weird source names just to
+        answer one basic question: "Is AI already sending people to my site?"
       </p>
     ),
   },

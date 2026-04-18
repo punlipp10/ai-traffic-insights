@@ -55,7 +55,7 @@ function PrivacyPage() {
             <p>
               We also save a summary of each scan to our database. This includes
               your Google account email, the Google Analytics property ID and
-              name, and aggregate numbers from your report — for example total
+              name, and aggregate numbers from your report, for example total
               AI sessions, top source, and top page. We do{" "}
               <strong>not</strong> store your raw analytics data or individual
               visitor records.
