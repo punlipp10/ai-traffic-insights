@@ -49,7 +49,7 @@ function LandingPage() {
               style={{ fontSize: "1rem", fontFamily: "'Figtree', sans-serif", maxWidth: "30ch" }}
             >
               Connect your Google Analytics. See if ChatGPT, Perplexity, Claude
-              and others are already sending visitors.
+              and others are already sending visitors to your website.
             </p>
 
             {/* AI source logos */}
