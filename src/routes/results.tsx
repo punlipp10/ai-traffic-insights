@@ -66,6 +66,10 @@ function getLogoUrl(label: string, source?: string): string | null {
   return null;
 }
 
+function isExternalLogo(label: string): boolean {
+  return !LOCAL_LOGOS[label];
+}
+
 export const Route = createFileRoute("/results")({
   validateSearch: (search) => ({
     propertyId: (search.propertyId as string) || "",
@@ -605,7 +609,7 @@ function HeroCard({ report, periodLabel }: { report: AITrafficReport; periodLabe
                   style={{ fontFamily: bodyFont }}
                 >
                   {getLogoUrl(report.topSource.label) && (
-                    <img src={getLogoUrl(report.topSource.label)!} alt={`${report.topSource.label} logo`} width={16} height={16} className="w-4 h-4 flex-none rounded-sm object-contain" />
+                    <img src={getLogoUrl(report.topSource.label)!} alt={`${report.topSource.label} logo`} width={16} height={16} className="w-4 h-4 flex-none rounded-sm object-contain" style={isExternalLogo(report.topSource.label) ? { mixBlendMode: 'multiply' } : undefined} />
                   )}
                   {report.topSource.label}
                 </span>
@@ -700,7 +704,7 @@ function SourceList({
             <div className="relative flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {getLogoUrl(s.label, s.source) && (
-                  <img src={getLogoUrl(s.label, s.source)!} alt={`${s.label} logo`} width={20} height={20} loading="lazy" className="w-5 h-5 flex-none rounded-sm object-contain" />
+                  <img src={getLogoUrl(s.label, s.source)!} alt={`${s.label} logo`} width={20} height={20} loading="lazy" className="w-5 h-5 flex-none rounded-sm object-contain" style={isExternalLogo(s.label) ? { mixBlendMode: 'multiply' } : undefined} />
                 )}
                 <div>
                   <p
