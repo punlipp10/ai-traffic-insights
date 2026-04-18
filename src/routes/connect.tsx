@@ -186,15 +186,12 @@ function ConnectPage() {
               <button
                 key={prop.propertyId}
                 type="button"
-                disabled={loadingProperty !== null}
                 onClick={() => {
+                  if (loadingProperty) return;
                   setLoadingProperty(prop.propertyId);
-                  // Let React render the spinner first, then navigate
-                  setTimeout(() => {
-                    navigate({ to: "/results", search: { propertyId: prop.propertyId, propertyName: prop.displayName } });
-                  }, 0);
+                  navigate({ to: "/results", search: { propertyId: prop.propertyId, propertyName: prop.displayName } });
                 }}
-                className={`block w-full text-left px-5 py-4 hover:bg-muted/40 active:bg-muted/70 transition-colors disabled:cursor-default ${
+                className={`block w-full text-left px-5 py-4 hover:bg-muted/40 active:bg-muted/70 transition-colors ${
                   idx < properties.length - 1 ? "border-b border-border/50" : ""
                 } ${loadingProperty === prop.propertyId ? "bg-muted/40" : ""}`}
               >
