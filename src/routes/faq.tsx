@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 
 const displayFont = "'Barlow Condensed', sans-serif";
 const bodyFont = "'Figtree', sans-serif";
@@ -87,7 +88,7 @@ export const Route = createFileRoute("/faq")({
 
 interface FAQItem {
   q: string;
-  a: () => React.ReactNode;
+  a: () => ReactNode;
 }
 
 const FAQ_ITEMS: FAQItem[] = [
