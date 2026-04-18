@@ -88,6 +88,7 @@ export interface AITrafficReport {
     sessions: number;
   }>;
   state: "meaningful" | "low" | "none";
+  domain: string | null;
 }
 
 export interface GA4Property {
