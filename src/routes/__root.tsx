@@ -98,42 +98,58 @@ gtag('config', '${gaMeasurementId}');`,
       mainEntity: [
         {
           "@type": "Question",
-          name: "How do I check if AI is sending me traffic?",
+          name: "What is IsAISendingMeTraffic.com?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Connect your Google Analytics account to IsAISendingMeTraffic.com. The tool scans your GA4 data for referral traffic from AI sources like ChatGPT, Perplexity, Claude, Gemini, Grok, and DeepSeek — completely free and with read-only access.",
+            text: "It's a simple way to check whether AI tools like ChatGPT are already sending traffic to your website. Connect your Google Analytics account and instantly see referral traffic from AI sources like ChatGPT, Perplexity, Claude, Gemini, Grok, and DeepSeek.",
           },
         },
         {
           "@type": "Question",
-          name: "Which AI tools can send traffic to my website?",
+          name: "Does it cost anything?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "AI tools that can send referral traffic include ChatGPT (chat.openai.com), Perplexity (perplexity.ai), Google Gemini (gemini.google.com), Anthropic Claude (claude.ai), xAI Grok (grok.com), Microsoft Copilot (copilot.microsoft.com), and DeepSeek (deepseek.com). These AI search engines and assistants cite websites in their responses, generating referral traffic visible in Google Analytics.",
+            text: "Nope. You can run the check for free.",
           },
         },
         {
           "@type": "Question",
-          name: "Is this AI traffic checker free?",
+          name: "Is my data private?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes, IsAISendingMeTraffic.com is completely free. It uses read-only access to your Google Analytics — it cannot modify your analytics setup. Your access tokens stay in an encrypted session cookie on your device.",
+            text: "Yes. We only ask for read-only access so we can look at your GA4 data and generate your report. We do not edit your analytics, change settings, or touch your site.",
           },
         },
         {
           "@type": "Question",
-          name: "What is AI referral traffic?",
+          name: "What does AI traffic mean?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "AI referral traffic is website visits that come from AI-powered tools and search engines. When users ask ChatGPT, Perplexity, or other AI assistants a question, these tools sometimes cite and link to websites in their answers. Visitors who click those links show up as AI referral traffic in Google Analytics.",
+            text: "It means visits to your site that appear to have come from AI tools and assistants, based on the referral data GA4 gives us. It's helpful, but it's not perfect. Some AI-driven visits may still be hidden, unattributed, or grouped somewhere else.",
           },
         },
         {
           "@type": "Question",
-          name: "What is Generative Engine Optimization (GEO)?",
+          name: "What if it says I'm not getting AI traffic yet?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Generative Engine Optimization (GEO) is the practice of optimizing your website content to be cited by AI search engines like ChatGPT, Perplexity, and Gemini. Unlike traditional SEO which focuses on ranking in search results, GEO focuses on getting your content referenced in AI-generated answers. IsAISendingMeTraffic.com helps you measure whether GEO efforts are working by tracking AI referral traffic.",
+            text: "That's actually pretty normal. A lot of small businesses are still very early here. A low number does not mean this channel is not important. It usually just means the traffic is still small, hard to spot, or has room to grow.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Does this change anything in my GA4 account?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Not at all. This is read-only, so nothing gets changed or reconfigured.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Why should I care if AI is sending me traffic?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Because it can be an early signal that people are already discovering your business in new ways. Even a small amount of AI traffic can be interesting. It may mean your site is starting to show up in the tools people use to research, compare options, and make decisions.",
           },
         },
       ],

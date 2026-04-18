@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthGoogleRouteImport } from './routes/auth.google'
@@ -24,6 +25,11 @@ const ResultsRoute = ResultsRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConnectRoute = ConnectRouteImport.update({
@@ -50,6 +56,7 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
+  '/faq': typeof FaqRoute
   '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
+  '/faq': typeof FaqRoute
   '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
+  '/faq': typeof FaqRoute
   '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -77,6 +86,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/connect'
+    | '/faq'
     | '/privacy'
     | '/results'
     | '/auth/callback'
@@ -85,6 +95,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/connect'
+    | '/faq'
     | '/privacy'
     | '/results'
     | '/auth/callback'
@@ -93,6 +104,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/connect'
+    | '/faq'
     | '/privacy'
     | '/results'
     | '/auth/callback'
@@ -102,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConnectRoute: typeof ConnectRoute
+  FaqRoute: typeof FaqRoute
   PrivacyRoute: typeof PrivacyRoute
   ResultsRoute: typeof ResultsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -122,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/connect': {
@@ -158,6 +178,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConnectRoute: ConnectRoute,
+  FaqRoute: FaqRoute,
   PrivacyRoute: PrivacyRoute,
   ResultsRoute: ResultsRoute,
   AuthCallbackRoute: AuthCallbackRoute,

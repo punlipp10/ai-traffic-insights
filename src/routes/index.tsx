@@ -120,13 +120,23 @@ function LandingPage() {
               lovedby.ai
             </a>
           </p>
-          <Link
-            to="/privacy"
-            className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-            style={{ fontFamily: "'Figtree', sans-serif" }}
-          >
-            Privacy
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/faq"
+              className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+              style={{ fontFamily: "'Figtree', sans-serif" }}
+            >
+              FAQ
+            </Link>
+            <span className="text-border text-xs" aria-hidden="true">·</span>
+            <Link
+              to="/privacy"
+              className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+              style={{ fontFamily: "'Figtree', sans-serif" }}
+            >
+              Privacy
+            </Link>
+          </div>
       </footer>
     </div>
   );
