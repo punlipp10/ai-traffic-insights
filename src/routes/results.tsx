@@ -473,6 +473,22 @@ function ResultsPage() {
         {/* Print-only footer — hidden on screen, visible in print */}
         <div className="print-footer" aria-hidden="true" />
 
+        {/* Visible footer */}
+        <p className="text-xs text-muted-foreground/50 text-center mt-10 mb-4 print-hide" style={{ fontFamily: bodyFont }}>
+          With{" "}
+          <span className="text-blue-500" aria-hidden="true">♥</span>
+          <span className="sr-only">love</span>
+          {" "}by{" "}
+          <a
+            href="https://www.lovedby.ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground/50 hover:text-foreground transition-colors font-medium"
+          >
+            LovedByAI
+          </a>
+        </p>
+
       </div>
     </div>
   );
