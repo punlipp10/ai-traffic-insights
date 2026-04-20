@@ -888,7 +888,7 @@ function ZeroState({
                     className="text-muted-foreground truncate mr-4 flex-1"
                     style={{ fontFamily: bodyFont }}
                   >
-                    {p.path}
+                    {formatPath(p.path)}
                   </span>
                   <span
                     className="font-semibold text-foreground"
