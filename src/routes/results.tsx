@@ -876,7 +876,7 @@ function ZeroState({
               className="text-[11px] tracking-widest uppercase text-muted-foreground/60 mb-3"
               style={{ fontFamily: bodyFont }}
             >
-              Your top organic pages
+              Your top pages from Google & search engines
             </p>
             <div className="space-y-2">
               {topOrganicPages.map((p) => (
