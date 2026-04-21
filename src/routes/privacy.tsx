@@ -216,7 +216,7 @@ function PrivacyPage() {
             <span className="sr-only">love</span>
             {" "}by{" "}
             <a
-              href="https://www.lovedby.ai"
+              href="https://www.lovedby.ai?utm_source=isaisendingmetraffic&utm_medium=referral&utm_content=footer"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground/50 hover:text-foreground transition-colors font-medium"

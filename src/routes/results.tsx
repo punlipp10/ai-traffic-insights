@@ -502,7 +502,7 @@ function ResultsPage() {
                   LovedByAI helps businesses get discovered by AI tools, automagically.
                 </p>
                 <a
-                  href="https://www.lovedby.ai"
+                  href="https://www.lovedby.ai?utm_source=isaisendingmetraffic&utm_medium=referral&utm_content=cta_results"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
@@ -525,7 +525,7 @@ function ResultsPage() {
           <span className="sr-only">love</span>
           {" "}by{" "}
           <a
-            href="https://www.lovedby.ai"
+            href="https://www.lovedby.ai?utm_source=isaisendingmetraffic&utm_medium=referral&utm_content=footer"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground/50 hover:text-foreground transition-colors font-medium"
@@ -910,7 +910,7 @@ function ZeroState({
             Want AI tools to start recommending your site?
           </p>
           <a
-            href="https://www.lovedby.ai"
+            href="https://www.lovedby.ai?utm_source=isaisendingmetraffic&utm_medium=referral&utm_content=zero_state"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"

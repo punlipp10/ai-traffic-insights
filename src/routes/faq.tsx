@@ -164,7 +164,7 @@ const FAQ_ITEMS: FAQItem[] = [
       <p>
         This little tool was made with love by{" "}
         <a
-          href="https://www.lovedby.ai"
+          href="https://www.lovedby.ai?utm_source=isaisendingmetraffic&utm_medium=referral&utm_content=faq"
           target="_blank"
           rel="noopener noreferrer"
           className="text-primary underline underline-offset-2 hover:opacity-70 transition-opacity"
@@ -272,7 +272,7 @@ function FAQPage() {
             <span className="sr-only">love</span>
             {" "}by{" "}
             <a
-              href="https://www.lovedby.ai"
+              href="https://www.lovedby.ai?utm_source=isaisendingmetraffic&utm_medium=referral&utm_content=footer"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground/50 hover:text-foreground transition-colors font-medium"
