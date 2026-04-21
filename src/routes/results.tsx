@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { fetchAITrafficReport } from "@/lib/ga4.functions";
 import { saveScan } from "@/lib/tracking.functions";
 import type { AITrafficReport } from "@/lib/ai-sources";
+import { trackEvent } from "@/lib/analytics.client";
 
 const displayFont = "'Barlow Condensed', sans-serif";
 const bodyFont = "'Figtree', sans-serif";
@@ -168,6 +169,18 @@ function ResultsPage() {
   const [copied, setCopied] = useState<"summary" | "error" | null>(null);
   const [loadingPeriod, setLoadingPeriod] = useState<number | null>(null);
 
+  useEffect(() => {
+    if (!report || error) return;
+    trackEvent("report_viewed", {
+      days_selected: days,
+      result_state: report.state,
+      has_ai_traffic: report.totalAISessions > 0,
+      ai_sessions: report.totalAISessions,
+      ai_sources_count: report.sourceBreakdown.length,
+      top_ai_source: report.topSource?.label,
+    });
+  }, [days, error, report]);
+
   if (error || !report) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-6">
@@ -278,6 +291,10 @@ function ResultsPage() {
                   key={opt.days}
                   type="button"
                   onClick={() => {
+                    trackEvent("results_period_changed", {
+                      from_days: days,
+                      to_days: opt.days,
+                    });
                     setLoadingPeriod(opt.days);
                     setTimeout(() => {
                       window.location.href = `/results?propertyId=${encodeURIComponent(propertyId)}&propertyName=${encodeURIComponent(propertyName)}&days=${opt.days}`;
@@ -415,6 +432,7 @@ function ResultsPage() {
                     // 1. Clipboard API
                     if (navigator.clipboard?.writeText) {
                       await navigator.clipboard.writeText(shareText);
+                      trackEvent("summary_copy_clicked", { status: "success" });
                       setCopied("summary");
                       setTimeout(() => setCopied(null), 2000);
                       return;
@@ -430,12 +448,14 @@ function ResultsPage() {
                     const ok = document.execCommand("copy");
                     document.body.removeChild(el);
                     if (ok) {
+                      trackEvent("summary_copy_clicked", { status: "success" });
                       setCopied("summary");
                       setTimeout(() => setCopied(null), 2000);
                       return;
                     }
                     throw new Error("All copy methods failed");
                   } catch {
+                    trackEvent("summary_copy_clicked", { status: "error" });
                     setCopied("error");
                     setTimeout(() => setCopied(null), 3000);
                   }
@@ -457,7 +477,10 @@ function ResultsPage() {
               {/* Download PDF */}
               <button
                 type="button"
-                onClick={() => window.print()}
+                onClick={() => {
+                  trackEvent("download_pdf_clicked", { source: "results" });
+                  window.print();
+                }}
                 className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors text-left flex items-center gap-3 cursor-pointer"
                 style={{ fontFamily: bodyFont }}
               >
@@ -471,6 +494,11 @@ function ResultsPage() {
               {/* Check another property */}
               <Link
                 to="/connect"
+                onClick={() => {
+                  trackEvent("check_another_property_clicked", {
+                    source: "results_actions",
+                  });
+                }}
                 className="block w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors text-left"
                 style={{ fontFamily: bodyFont }}
               >
@@ -503,6 +531,9 @@ function ResultsPage() {
                 </p>
                 <a
                   href="https://www.lovedby.ai?utm_source=isaisendingmetraffic&utm_medium=referral&utm_content=cta_results"
+                  onClick={() => {
+                    trackEvent("lovedbyai_cta_click", { placement: "results_sidebar" });
+                  }}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
@@ -911,6 +942,9 @@ function ZeroState({
           </p>
           <a
             href="https://www.lovedby.ai?utm_source=isaisendingmetraffic&utm_medium=referral&utm_content=zero_state"
+            onClick={() => {
+              trackEvent("lovedbyai_cta_click", { placement: "zero_state" });
+            }}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"

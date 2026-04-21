@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { listGA4Properties } from "@/lib/ga4.functions";
 import { logoutGoogle } from "@/lib/auth.functions";
 import type { GA4Property } from "@/lib/ai-sources";
+import { trackEvent } from "@/lib/analytics.client";
 
 const displayFont = "'Barlow Condensed', sans-serif";
 const bodyFont = "'Figtree', sans-serif";
@@ -53,7 +54,15 @@ function ConnectPage() {
   const [disconnecting, setDisconnecting] = useState(false);
   const [loadingProperty, setLoadingProperty] = useState<string | null>(null);
 
+  useEffect(() => {
+    trackEvent("ga4_property_list_viewed", {
+      status: error ? "error" : "ok",
+      properties_available_count: properties.length,
+    });
+  }, [error, properties.length]);
+
   const handleDisconnect = async () => {
+    trackEvent("google_disconnect_click", { source: "connect" });
     setDisconnecting(true);
     try {
       await logoutGoogle();
@@ -75,6 +84,9 @@ function ConnectPage() {
           </p>
           <a
             href="/auth/google"
+            onClick={() => {
+              trackEvent("connect_google_click", { source: "connect_gate" });
+            }}
             className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
             style={{ fontFamily: bodyFont }}
           >
@@ -103,6 +115,9 @@ function ConnectPage() {
           </p>
           <a
             href="/auth/google"
+            onClick={() => {
+              trackEvent("connect_google_click", { source: "connect_error" });
+            }}
             className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
             style={{ fontFamily: bodyFont }}
           >
@@ -133,6 +148,9 @@ function ConnectPage() {
           <div className="flex gap-3 justify-center pt-2">
             <a
               href="/auth/google"
+              onClick={() => {
+                trackEvent("connect_google_click", { source: "connect_no_properties" });
+              }}
               className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
               style={{ fontFamily: bodyFont }}
             >
@@ -217,6 +235,10 @@ function ConnectPage() {
                 key={prop.propertyId}
                 type="button"
                 onClick={() => {
+                  trackEvent("ga4_property_selected", {
+                    source: "connect",
+                    properties_available_count: properties.length,
+                  });
                   setLoadingProperty(prop.propertyId);
                   setTimeout(() => {
                     window.location.href = `/results?propertyId=${encodeURIComponent(prop.propertyId)}&propertyName=${encodeURIComponent(prop.displayName)}&days=30`;

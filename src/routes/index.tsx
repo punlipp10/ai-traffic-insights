@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { trackEvent } from "@/lib/analytics.client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -85,6 +86,9 @@ function LandingPage() {
             {/* CTA */}
             <a
               href="/auth/google"
+              onClick={() => {
+                trackEvent("connect_google_click", { source: "landing" });
+              }}
               className="flex items-center justify-center gap-2.5 w-full max-w-sm bg-primary text-primary-foreground font-semibold text-base rounded-xl transition-all hover:opacity-90 active:scale-[0.98] md:mx-auto"
               style={{ paddingTop: "1rem", paddingBottom: "1rem", fontFamily: "'Figtree', sans-serif" }}
             >
