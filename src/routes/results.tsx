@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { fetchAITrafficReport } from "@/lib/ga4.functions";
 import { saveScan } from "@/lib/tracking.functions";
 import type { AITrafficReport } from "@/lib/ai-sources";
@@ -145,11 +145,10 @@ function LoadingState() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 gap-5">
       <div className="flex gap-1.5">
-        {[0, 1, 2].map((i) => (
+        {(["animate-bounce", "animate-bounce [animation-delay:150ms]", "animate-bounce [animation-delay:300ms]"] as const).map((cls, i) => (
           <span
             key={i}
-            className="w-2 h-2 rounded-full bg-primary animate-bounce"
-            style={{ animationDelay: `${i * 0.15}s` }}
+            className={`w-2 h-2 rounded-full bg-primary ${cls}`}
           />
         ))}
       </div>
@@ -313,11 +312,10 @@ function ResultsPage() {
           {loadingPeriod !== null && (
             <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-[2px] flex flex-col items-center justify-center gap-4">
               <div className="flex gap-1.5">
-                {[0, 1, 2].map((i) => (
+                {(["animate-bounce", "animate-bounce [animation-delay:150ms]", "animate-bounce [animation-delay:300ms]"] as const).map((cls, i) => (
                   <span
                     key={i}
-                    className="w-2 h-2 rounded-full bg-primary animate-bounce"
-                    style={{ animationDelay: `${i * 0.15}s` }}
+                    className={`w-2 h-2 rounded-full bg-primary ${cls}`}
                   />
                 ))}
               </div>
@@ -840,12 +838,25 @@ function TrendChart({
 }: {
   data: Array<{ date: string; sessions: number }>;
 }) {
-  const maxSessions = Math.max(...data.map((d) => d.sessions), 1);
+  // Aggregate into weekly buckets when dataset is too large to render individual bars
+  // (365 daily bars on a ~350px mobile container = sub-pixel widths, invisible)
+  const displayData = useMemo(() => {
+    if (data.length <= 90) return data;
+    const weeks: Array<{ date: string; sessions: number }> = [];
+    for (let i = 0; i < data.length; i += 7) {
+      const chunk = data.slice(i, i + 7);
+      const sessions = chunk.reduce((sum, d) => sum + d.sessions, 0);
+      weeks.push({ date: chunk[0].date, sessions });
+    }
+    return weeks;
+  }, [data]);
+
+  const maxSessions = Math.max(...displayData.map((d) => d.sessions), 1);
 
   return (
     <div className="rounded-xl border border-border bg-card px-4 pt-4 pb-3">
       <div className="flex items-end gap-px h-20">
-        {data.map((d) => {
+        {displayData.map((d) => {
           const height = (d.sessions / maxSessions) * 100;
           return (
             <div
