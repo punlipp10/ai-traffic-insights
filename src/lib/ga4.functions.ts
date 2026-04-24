@@ -118,15 +118,15 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
     const fmt = (d: Date) => d.toISOString().split("T")[0];
 
     // Report 1: All traffic by source (current period + prev period)
-    // Include "dateRange" dimension so each row is unambiguously labeled
-    // "date_range_0" (current) or "date_range_1" (previous). Without this,
-    // sources that only appear in one period get misclassified.
+    // GA4 automatically appends a dateRange dimension to dimensionValues when
+    // multiple dateRanges are requested — values are "date_range_0" (current)
+    // and "date_range_1" (previous). Do NOT list it in dimensions explicitly.
     const sourceReport = await runGA4Report(accessToken, propertyId, {
       dateRanges: [
         { startDate: fmt(periodStart), endDate: fmt(today) },
         { startDate: fmt(prevPeriodStart), endDate: fmt(prevPeriodEnd) },
       ],
-      dimensions: [{ name: "sessionSource" }, { name: "dateRange" }],
+      dimensions: [{ name: "sessionSource" }],
       metrics: [
         { name: "sessions" },
         { name: "totalUsers" },
