@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { trackEvent } from "@/lib/analytics.client";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/")({
   head: () => ({

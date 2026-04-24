@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { listGA4Properties } from "@/lib/ga4.functions";
 import { logoutGoogle } from "@/lib/auth.functions";
 import type { GA4Property } from "@/lib/ai-sources";
-import { trackEvent } from "@/lib/analytics.client";
+import { trackEvent } from "@/lib/analytics";
 
 const displayFont = "'Barlow Condensed', sans-serif";
 const bodyFont = "'Figtree', sans-serif";

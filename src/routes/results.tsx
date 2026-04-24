@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { fetchAITrafficReport } from "@/lib/ga4.functions";
 import { saveScan } from "@/lib/tracking.functions";
 import type { AITrafficReport } from "@/lib/ai-sources";
-import { trackEvent } from "@/lib/analytics.client";
+import { trackEvent } from "@/lib/analytics";
 
 const displayFont = "'Barlow Condensed', sans-serif";
 const bodyFont = "'Figtree', sans-serif";
