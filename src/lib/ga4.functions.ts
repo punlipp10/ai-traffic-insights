@@ -118,12 +118,15 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
     const fmt = (d: Date) => d.toISOString().split("T")[0];
 
     // Report 1: All traffic by source (current period + prev period)
+    // Include "dateRange" dimension so each row is unambiguously labeled
+    // "date_range_0" (current) or "date_range_1" (previous). Without this,
+    // sources that only appear in one period get misclassified.
     const sourceReport = await runGA4Report(accessToken, propertyId, {
       dateRanges: [
         { startDate: fmt(periodStart), endDate: fmt(today) },
         { startDate: fmt(prevPeriodStart), endDate: fmt(prevPeriodEnd) },
       ],
-      dimensions: [{ name: "sessionSource" }],
+      dimensions: [{ name: "sessionSource" }, { name: "dateRange" }],
       metrics: [
         { name: "sessions" },
         { name: "totalUsers" },
@@ -132,38 +135,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
       limit: "10000",
     });
 
-    // Identify AI sources from report 1
-    const aiSourceValues: string[] = [];
-    const sourceData: Array<{
-      source: string;
-      label: string;
-      category: "known" | "possible";
-      sessions: number;
-      prevSessions: number;
-      users: number;
-    }> = [];
-
-    for (const row of sourceReport.rows || []) {
-      const source = row.dimensionValues?.[0]?.value || "";
-      const match = matchAISource(source);
-      if (match) {
-        aiSourceValues.push(source);
-        const dateRangeIdx =
-          row.dimensionValues?.length > 1
-            ? 0
-            : 0;
-        sourceData.push({
-          source,
-          label: match.label,
-          category: match.category,
-          sessions: parseInt(row.metricValues?.[0]?.value || "0"),
-          prevSessions: 0,
-          users: parseInt(row.metricValues?.[1]?.value || "0"),
-        });
-      }
-    }
-
-    // Parse multi-date-range data
+    // Parse multi-date-range data using explicit dateRange dimension
     const currentSources = new Map<
       string,
       { sessions: number; users: number; newUsers: number; label: string; category: "known" | "possible" }
@@ -172,6 +144,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
 
     for (const row of sourceReport.rows || []) {
       const source = row.dimensionValues?.[0]?.value || "";
+      const dateRangeLabel = row.dimensionValues?.[1]?.value || "";
       const match = matchAISource(source);
       if (!match) continue;
 
@@ -179,10 +152,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
       const users = parseInt(row.metricValues?.[1]?.value || "0");
       const newUsers = parseInt(row.metricValues?.[2]?.value || "0");
 
-      // GA4 returns rows per date range. The dateRange index is implicit
-      // in the order for single-dimension reports with multiple date ranges.
-      // We'll handle this by checking if we've already seen this source.
-      if (!currentSources.has(source)) {
+      if (dateRangeLabel === "date_range_0") {
         currentSources.set(source, {
           sessions,
           users,
@@ -191,9 +161,13 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
           category: match.category,
         });
       } else {
+        // date_range_1 = previous period
         prevSources.set(source, sessions);
       }
     }
+
+    // Collect AI source values from current period only (for trend/pages queries)
+    const aiSourceValues = Array.from(currentSources.keys());
 
     // Get daily trend + top pages only if we have AI sources
     let dailyTrend: Array<{ date: string; sessions: number }> = [];
