@@ -351,6 +351,8 @@ function ResultsPage() {
                     });
                     setLoadingPeriod(opt.days);
                     void navigate({ to: "/results", search: { propertyId, propertyName, days: opt.days } });
+                    // Reset after navigation starts so spinner doesn't linger
+                    setTimeout(() => setLoadingPeriod(null), 5000);
                   }}
                   className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1.5"
                   style={{ fontFamily: bodyFont }}
@@ -407,7 +409,7 @@ function ResultsPage() {
               )}
             </div>
 
-            {/* Trend chart */}}
+            {/* Trend chart */}
             {report.dailyTrend.length > 0 && (
               <section className="mb-6 animate-fade-up animate-delay-100">
                 <h2
@@ -484,7 +486,7 @@ function ResultsPage() {
               )}
             </div>
 
-            {/* Actions */}}
+            {/* Actions */}
             <section className="mb-8 space-y-2 print-hide animate-fade-up animate-delay-500">
               <h2
                 className="text-[11px] tracking-widest uppercase text-muted-foreground/60 mb-4"
