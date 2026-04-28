@@ -77,6 +77,19 @@ export const Route = createRootRoute({
       },
     };
 
+    const websiteSchema = {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "Is AI Sending Me Traffic?",
+      url: "https://isaisendingmetraffic.com",
+      description: "Free tool to check if ChatGPT, Perplexity, Claude, Gemini, and other AI tools are sending traffic to your website via Google Analytics.",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: "https://isaisendingmetraffic.com",
+        "query-input": "required name=search_term_string",
+      },
+    };
+
     const faqSchema = {
       "@context": "https://schema.org",
       "@type": "FAQPage",
@@ -146,6 +159,11 @@ export const Route = createRootRoute({
       {
         tag: "script" as const,
         attrs: { type: "application/ld+json" },
+        children: JSON.stringify(websiteSchema),
+      },
+      {
+        tag: "script" as const,
+        attrs: { type: "application/ld+json" },
         children: JSON.stringify(faqSchema),
       },
     ];
@@ -160,20 +178,21 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Free AI traffic checker — connect your Google Analytics and instantly see if ChatGPT, Perplexity, Claude, Gemini, and other AI tools are sending visitors to your website.",
+          "Is AI sending me traffic? Connect your Google Analytics and instantly see if ChatGPT, Perplexity, Claude, Gemini, Grok, and other AI tools are sending visitors to your website. Free, private, read-only.",
       },
       { property: "og:title", content: "Is AI Sending Me Traffic? — Free AI Traffic Checker" },
       {
         property: "og:description",
         content:
-          "Connect your Google Analytics and instantly see if ChatGPT, Perplexity, Claude, and other AI tools are sending you traffic. Free, private, read-only.",
+          "Is AI sending me traffic? Connect Google Analytics and instantly find out. See visits from ChatGPT, Perplexity, Claude, Gemini and more. Free, private, 30 seconds.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://isaisendingmetraffic.com" },
+      { property: "og:url", content: "https://isaisendingmetraffic.com/" },
       { property: "og:site_name", content: "Is AI Sending Me Traffic?" },
       { property: "og:image", content: "https://isaisendingmetraffic.com/social-share-image-isaisendingmetraffic.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Is AI Sending Me Traffic? — Free AI Traffic Checker" },
       { property: "og:locale", content: "en_US" },
       { name: "twitter:card", content: "summary_large_image" },
       {
@@ -183,16 +202,16 @@ export const Route = createRootRoute({
       {
         name: "twitter:description",
         content:
-          "Connect your Google Analytics and instantly see if AI tools are sending you traffic. Free, private, read-only.",
+          "Is AI sending me traffic? Connect Google Analytics and instantly see visits from ChatGPT, Perplexity, Claude, Gemini and more. Free, 30 seconds.",
       },
       { name: "twitter:image", content: "https://isaisendingmetraffic.com/social-share-image-isaisendingmetraffic.png" },
+      { name: "twitter:image:alt", content: "Is AI Sending Me Traffic? — Free AI Traffic Checker" },
       { name: "twitter:site", content: "@lovedbyai2" },
       { name: "twitter:creator", content: "@lovedbyai2" },
       { name: "robots", content: "index, follow" },
     ],
     links: [
       { rel: "icon", href: "/favicon.png", type: "image/png" },
-      { rel: "canonical", href: "https://isaisendingmetraffic.com" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "dns-prefetch", href: "https://fonts.googleapis.com" },

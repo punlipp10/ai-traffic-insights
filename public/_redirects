@@ -1,0 +1,8 @@
+# Cloudflare Workers Assets redirects
+# Note: www → non-www and http → https redirects must also be configured
+# as Cloudflare Redirect Rules in the dashboard (Workers cannot intercept
+# requests before the domain resolves at the DNS level).
+#
+# In the Cloudflare dashboard → Rules → Redirect Rules, add:
+#   - (http.host eq "www.isaisendingmetraffic.com") → https://isaisendingmetraffic.com${uri.path} (301)
+#   - (http.host eq "isaisendingmetraffic.com" and not ssl) → https://isaisendingmetraffic.com${uri.path} (301)

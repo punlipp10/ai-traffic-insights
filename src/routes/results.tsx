@@ -71,6 +71,92 @@ function isExternalLogo(label: string): boolean {
   return !LOCAL_LOGOS[label];
 }
 
+// ---------------------------------------------------------------------------
+// Demo data — returned when propertyId === "demo"
+// ---------------------------------------------------------------------------
+
+function getDemoReport(days: number): AITrafficReport {
+  // Fixed "today" for demo so dates are always stable
+  const today = new Date("2026-04-27T12:00:00Z");
+
+  // Build daily trend deterministically (no randomness)
+  const baseAvg = days <= 7 ? 87 : days <= 30 ? 128 : days <= 90 ? 138 : 145;
+  const dailyTrend: Array<{ date: string; sessions: number }> = [];
+  const startDate = new Date(today);
+  startDate.setUTCDate(startDate.getUTCDate() - days + 1);
+
+  for (let i = 0; i < days; i++) {
+    const d = new Date(startDate);
+    d.setUTCDate(d.getUTCDate() + i);
+    const dow = d.getUTCDay();
+    const weekendFactor = dow === 0 || dow === 6 ? 0.68 : 1.0;
+    const trendFactor = 0.72 + (i / Math.max(days - 1, 1)) * 0.56;
+    const waveFactor = 1 + 0.18 * Math.sin((i / 6.5) * Math.PI);
+    const sessions = Math.max(0, Math.round(baseAvg * weekendFactor * trendFactor * waveFactor));
+    dailyTrend.push({ date: d.toISOString().slice(0, 10).replace(/-/g, ""), sessions });
+  }
+
+  const totalAISessions = dailyTrend.reduce((s, d) => s + d.sessions, 0);
+  const prevAISessions = Math.round(totalAISessions * 0.63);
+  const changePercent = Math.round(((totalAISessions - prevAISessions) / prevAISessions) * 100);
+
+  const endDateStr = today.toISOString().slice(0, 10);
+  const startDateStr = startDate.toISOString().slice(0, 10);
+  const prevEnd = new Date(startDate);
+  prevEnd.setUTCDate(prevEnd.getUTCDate() - 1);
+  const prevStart = new Date(prevEnd);
+  prevStart.setUTCDate(prevStart.getUTCDate() - days + 1);
+
+  const pct = (p: number) => Math.round(totalAISessions * p);
+
+  return {
+    propertyId: "demo",
+    propertyName: "TechBlog Example",
+    days,
+    dateRange: { start: startDateStr, end: endDateStr },
+    prevDateRange: {
+      start: prevStart.toISOString().slice(0, 10),
+      end: prevEnd.toISOString().slice(0, 10),
+    },
+    totalAISessions,
+    prevAISessions,
+    totalAIUsers: pct(0.889),
+    totalAINewUsers: pct(0.758),
+    changePercent,
+    topSource: { label: "ChatGPT", sessions: pct(0.479) },
+    topPage: { path: "/blog/what-is-machine-learning", sessions: pct(0.232) },
+    pagesWithAITraffic: 14,
+    sourceBreakdown: [
+      { source: "chatgpt.com", label: "ChatGPT", category: "known", sessions: pct(0.479), users: pct(0.426) },
+      { source: "perplexity.ai", label: "Perplexity", category: "known", sessions: pct(0.220), users: pct(0.197) },
+      { source: "claude.ai", label: "Claude", category: "known", sessions: pct(0.141), users: pct(0.128) },
+      { source: "gemini.google.com", label: "Gemini", category: "known", sessions: pct(0.081), users: pct(0.073) },
+      { source: "grok.com", label: "Grok", category: "known", sessions: pct(0.037), users: pct(0.034) },
+      { source: "deepseek.com", label: "DeepSeek", category: "known", sessions: pct(0.024), users: pct(0.022) },
+      { source: "copilot.microsoft.com", label: "Microsoft Copilot", category: "known", sessions: pct(0.011), users: pct(0.010) },
+      { source: "edgeservices.bing.com", label: "Bing (AI)", category: "possible", sessions: pct(0.007), users: pct(0.006) },
+    ],
+    topPages: [
+      { path: "/blog/what-is-machine-learning", sessions: pct(0.232) },
+      { path: "/blog/gpt-4-explained", sessions: pct(0.168) },
+      { path: "/blog/best-ai-tools-2024", sessions: pct(0.135) },
+      { path: "/blog/prompt-engineering-guide", sessions: pct(0.101) },
+      { path: "/blog/ai-vs-ml-difference", sessions: pct(0.063) },
+      { path: "/blog/chatgpt-use-cases", sessions: pct(0.052) },
+      { path: "/", sessions: pct(0.042) },
+      { path: "/blog/llm-explained", sessions: pct(0.035) },
+      { path: "/blog/neural-networks-beginners", sessions: pct(0.029) },
+      { path: "/blog/top-ai-companies-2025", sessions: pct(0.023) },
+    ],
+    dailyTrend,
+    topOrganicPages: [],
+    state: "meaningful",
+    domain: "techblog-example.com",
+  };
+}
+
+// ---------------------------------------------------------------------------
+
 export const Route = createFileRoute("/results")({
   validateSearch: (search) => ({
     propertyId: (search.propertyId as string) || "",
@@ -92,6 +178,9 @@ export const Route = createFileRoute("/results")({
   loader: async ({ deps }) => {
     if (!deps.propertyId) {
       return { report: null, error: "no_property" };
+    }
+    if (deps.propertyId === "demo") {
+      return { report: getDemoReport(deps.days), error: null };
     }
     try {
       const result = await fetchAITrafficReport({

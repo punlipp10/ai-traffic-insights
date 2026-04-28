@@ -7,11 +7,11 @@ const bodyFont = "'Figtree', sans-serif";
 export const Route = createFileRoute("/faq")({
   head: () => ({
     meta: [
-      { title: "FAQ — Is AI Sending Me Traffic?" },
+      { title: "FAQ: Is AI Sending Me Traffic? — Common Questions Answered" },
       {
         name: "description",
         content:
-          "Questions about IsAISendingMeTraffic.com — what it does, how it works, whether it's free, and what AI traffic actually means for your website.",
+          "Common questions about Is AI Sending Me Traffic — how it works, whether AI traffic from ChatGPT, Perplexity and Claude shows in GA4, and what to do if you're getting none.",
       },
     ],
     links: [{ rel: "canonical", href: "https://isaisendingmetraffic.com/faq" }],

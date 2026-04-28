@@ -106,7 +106,16 @@ function AILoadingOverlay() {
   );
 }
 
+const DEMO_PROPERTIES: GA4Property[] = [
+  { propertyId: "demo", displayName: "TechBlog Example", accountName: "Demo Account" },
+  { propertyId: "demo2", displayName: "SaaS Product (Demo)", accountName: "Demo Account" },
+  { propertyId: "demo3", displayName: "E-commerce Store (Demo)", accountName: "Demo Account" },
+];
+
 export const Route = createFileRoute("/connect")({
+  validateSearch: (search) => ({
+    demo: search.demo === "1" || search.demo === true,
+  }),
   head: () => ({
     meta: [
       { title: "Select Property — Is AI Sending Me Traffic?" },
@@ -114,10 +123,14 @@ export const Route = createFileRoute("/connect")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  loader: async () => {
+  loaderDeps: ({ search }) => ({ demo: search.demo }),
+  loader: async ({ deps }) => {
+    if (deps.demo) {
+      return { properties: DEMO_PROPERTIES, error: null, isDemo: true };
+    }
     try {
       const result = await listGA4Properties();
-      return { properties: result.properties, error: null };
+      return { properties: result.properties, error: null, isDemo: false };
     } catch (e: unknown) {
       const msg = (e as Error).message || "";
       const isAuthError =
@@ -127,6 +140,7 @@ export const Route = createFileRoute("/connect")({
       return {
         properties: [] as GA4Property[],
         error: isAuthError ? "not_authenticated" : `api_error: ${msg}`,
+        isDemo: false,
       };
     }
   },
@@ -134,7 +148,7 @@ export const Route = createFileRoute("/connect")({
 });
 
 function ConnectPage() {
-  const { properties, error } = Route.useLoaderData();
+  const { properties, error, isDemo } = Route.useLoaderData();
   const navigate = useNavigate();
   const [disconnecting, setDisconnecting] = useState(false);
   const [loadingProperty, setLoadingProperty] = useState<string | null>(null);
@@ -284,8 +298,8 @@ function ConnectPage() {
           </div>
           <button
             onClick={handleDisconnect}
-            disabled={disconnecting}
-            className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors whitespace-nowrap ml-4 mt-1 disabled:opacity-40"
+            disabled={disconnecting || isDemo}
+            className={`text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors whitespace-nowrap ml-4 mt-1 disabled:opacity-40 ${isDemo ? "invisible" : ""}`}
             style={{ fontFamily: bodyFont }}
           >
             {disconnecting ? "Disconnecting…" : "Disconnect"}
@@ -305,7 +319,7 @@ function ConnectPage() {
                 type="button"
                 onClick={() => {
                   trackEvent("ga4_property_selected", {
-                    source: "connect",
+                    source: isDemo ? "connect_demo" : "connect",
                     properties_available_count: properties.length,
                   });
                   setLoadingProperty(prop.propertyId);
