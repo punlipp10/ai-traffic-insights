@@ -115,9 +115,6 @@ export const Route = createFileRoute("/results")({
       return { report: null, error: (e as Error).message || "unknown" };
     }
   },
-  pendingComponent: LoadingState,
-  pendingMs: 0,
-  pendingMinMs: 300,
   component: ResultsPage,
 });
 
@@ -213,6 +210,33 @@ function LoadingState() {
         {LOADING_MESSAGES[msgIdx]}
       </p>
     </div>
+  );
+}
+
+function extractPropertyDomain(name: string): string | null {
+  const cleaned = name
+    .replace(/\s*[-|:]\s*(production|staging|dev|development|test|qa|prod|ga4|analytics|website|web|app|site)\s*$/gi, '')
+    .trim();
+  if (!cleaned) return null;
+  if (/\.[a-z]{2,}$/i.test(cleaned)) return cleaned.toLowerCase();
+  const slug = cleaned.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (slug.length < 3 || slug.length > 25) return null;
+  return `${slug}.com`;
+}
+
+function PropertyLogo({ propertyName }: { propertyName: string }) {
+  const [failed, setFailed] = useState(false);
+  const domain = extractPropertyDomain(propertyName);
+  if (!domain || failed) return null;
+  return (
+    <img
+      src={`https://img.logo.dev/${domain}?token=${LOGO_DEV_KEY}&size=32&format=png`}
+      alt={propertyName}
+      width={20}
+      height={20}
+      className="w-5 h-5 rounded-sm object-contain flex-none"
+      onError={() => setFailed(true)}
+    />
   );
 }
 
@@ -317,10 +341,17 @@ function ResultsPage() {
 
         {/* Top bar: breadcrumb + period switcher */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
-          <div className="flex items-center gap-3">
-            <a href="/" aria-label="Home">
-              <img src="/isaisendingmetraffic-logo.png" alt="Is AI Sending Me Traffic?" width={90} height={24} className="h-6 w-auto hover:opacity-80 transition-opacity" />
+          <div className="flex items-center gap-2.5">
+            <a
+              href="/"
+              aria-label="Home"
+              className="text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors flex-none"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+              </svg>
             </a>
+            <PropertyLogo propertyName={report.propertyName} />
             <p
               className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
               style={{ fontFamily: bodyFont }}
@@ -370,7 +401,7 @@ function ResultsPage() {
         </div>
 
         {/* Desktop two-column grid */}
-        <div className="md:grid md:grid-cols-[1fr_340px] md:gap-8 lg:grid-cols-[1fr_380px]">
+        <div className={`md:grid md:grid-cols-[1fr_340px] md:gap-8 md:items-start lg:grid-cols-[1fr_380px] transition-opacity duration-200${loadingPeriod !== null ? ' opacity-50 pointer-events-none select-none' : ''}`}>
 
           {/* LEFT COLUMN */}
           <div>
@@ -410,7 +441,7 @@ function ResultsPage() {
             </div>
 
             {/* Trend chart */}
-            {report.dailyTrend.length > 0 && (
+            {report.dailyTrend.some(d => d.sessions > 0) && (
               <section className="mb-6 animate-fade-up animate-delay-100">
                 <h2
                   className="text-[11px] tracking-widest uppercase text-muted-foreground/60 mb-3"
