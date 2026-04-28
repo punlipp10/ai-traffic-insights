@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { fetchAITrafficReport } from "@/lib/ga4.functions";
 import { saveScan } from "@/lib/tracking.functions";
@@ -219,6 +219,7 @@ function LoadingState() {
 function ResultsPage() {
   const { report, error } = Route.useLoaderData();
   const { propertyId, propertyName, days } = Route.useSearch();
+  const navigate = useNavigate();
   const [copied, setCopied] = useState<"summary" | "error" | null>(null);
   const [loadingPeriod, setLoadingPeriod] = useState<number | null>(null);
 
@@ -349,9 +350,7 @@ function ResultsPage() {
                       to_days: opt.days,
                     });
                     setLoadingPeriod(opt.days);
-                    setTimeout(() => {
-                      window.location.href = `/results?propertyId=${encodeURIComponent(propertyId)}&propertyName=${encodeURIComponent(propertyName)}&days=${opt.days}`;
-                    }, 50);
+                    void navigate({ to: "/results", search: { propertyId, propertyName, days: opt.days } });
                   }}
                   className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1.5"
                   style={{ fontFamily: bodyFont }}
@@ -365,23 +364,11 @@ function ResultsPage() {
             )}
           </div>
 
-          {/* Period-switch loading: just a small spinner on the clicked button (no full-screen overlay) */}
+          {/* Period-switch loading: spinner shown on clicked button; pendingComponent handles the full loading screen */}
         </div>
 
-        {/* Content area — loading overlay scoped here, not full-screen */}
-        <div className="relative">
-          {loadingPeriod !== null && (
-            <div className="absolute inset-0 z-10 bg-background/70 backdrop-blur-[1px] rounded-xl flex items-start justify-center pt-16 pointer-events-none">
-              <div className="flex gap-1.5">
-                {(["animate-bounce", "animate-bounce [animation-delay:150ms]", "animate-bounce [animation-delay:300ms]"] as const).map((cls, i) => (
-                  <span key={i} className={`w-2 h-2 rounded-full bg-primary ${cls}`} />
-                ))}
-              </div>
-            </div>
-          )}
-
         {/* Desktop two-column grid */}
-        <div className={`md:grid md:grid-cols-[1fr_340px] md:gap-8 lg:grid-cols-[1fr_380px] ${loadingPeriod !== null ? "opacity-40 pointer-events-none select-none" : ""}`}>
+        <div className="md:grid md:grid-cols-[1fr_340px] md:gap-8 lg:grid-cols-[1fr_380px]">
 
           {/* LEFT COLUMN */}
           <div>
@@ -391,7 +378,36 @@ function ResultsPage() {
               <HeroCard report={report} periodLabel={periodLabel} />
             </div>
 
-            {/* Trend chart */}
+            {/* Mobile only: source + pages right after hero */}
+            <div className="md:hidden">
+              {report.sourceBreakdown.length > 0 && (
+                <section className="mb-6 animate-fade-up animate-delay-150">
+                  <h2
+                    className="text-[11px] tracking-widest uppercase text-muted-foreground/60 mb-3"
+                    style={{ fontFamily: bodyFont }}
+                  >
+                    By LLM source · Last {periodLabel}
+                  </h2>
+                  <SourceList sources={report.sourceBreakdown} />
+                </section>
+              )}
+              {report.topPages.length > 0 && (
+                <section className="mb-6 animate-fade-up animate-delay-200">
+                  <div className="flex items-baseline justify-between mb-3">
+                    <h2
+                      className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
+                      style={{ fontFamily: bodyFont }}
+                    >
+                      Pages AI traffic · Last {periodLabel}
+                    </h2>
+                    <span className="text-[11px] text-muted-foreground/40" style={{ fontFamily: bodyFont }}>sessions</span>
+                  </div>
+                  <PageList pages={report.topPages} />
+                </section>
+              )}
+            </div>
+
+            {/* Trend chart */}}
             {report.dailyTrend.length > 0 && (
               <section className="mb-6 animate-fade-up animate-delay-100">
                 <h2
@@ -438,36 +454,37 @@ function ResultsPage() {
 
           {/* RIGHT COLUMN */}
           <div>
-            {/* Source breakdown */}
-            {report.sourceBreakdown.length > 0 && (
-              <section className="mb-6 animate-fade-up animate-delay-200">
-                <h2
-                  className="text-[11px] tracking-widest uppercase text-muted-foreground/60 mb-3"
-                  style={{ fontFamily: bodyFont }}
-                >
-                  By source
-                </h2>
-                <SourceList sources={report.sourceBreakdown} />
-              </section>
-            )}
-
-            {/* Top pages */}
-            {report.topPages.length > 0 && (
-              <section className="mb-6 animate-fade-up animate-delay-300">
-                <div className="flex items-baseline justify-between mb-3">
+            {/* Source breakdown + pages: desktop only (shown above hero on mobile) */}
+            <div className="hidden md:block">
+              {report.sourceBreakdown.length > 0 && (
+                <section className="mb-6 animate-fade-up animate-delay-200">
                   <h2
-                    className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
+                    className="text-[11px] tracking-widest uppercase text-muted-foreground/60 mb-3"
                     style={{ fontFamily: bodyFont }}
                   >
-                    Pages AI traffic landed on
+                    By LLM source · Last {periodLabel}
                   </h2>
-                  <span className="text-[11px] text-muted-foreground/40" style={{ fontFamily: bodyFont }}>sessions</span>
-                </div>
-                <PageList pages={report.topPages} />
-              </section>
-            )}
+                  <SourceList sources={report.sourceBreakdown} />
+                </section>
+              )}
 
-            {/* Actions */}
+              {report.topPages.length > 0 && (
+                <section className="mb-6 animate-fade-up animate-delay-300">
+                  <div className="flex items-baseline justify-between mb-3">
+                    <h2
+                      className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
+                      style={{ fontFamily: bodyFont }}
+                    >
+                      Pages AI traffic · Last {periodLabel}
+                    </h2>
+                    <span className="text-[11px] text-muted-foreground/40" style={{ fontFamily: bodyFont }}>sessions</span>
+                  </div>
+                  <PageList pages={report.topPages} />
+                </section>
+              )}
+            </div>
+
+            {/* Actions */}}
             <section className="mb-8 space-y-2 print-hide animate-fade-up animate-delay-500">
               <h2
                 className="text-[11px] tracking-widest uppercase text-muted-foreground/60 mb-4"
@@ -597,7 +614,6 @@ function ResultsPage() {
             </section>
           </div>
         </div>
-        </div>{/* end content-area relative wrapper */}
 
         {/* Print-only footer — hidden on screen, visible in print */}
         <div className="print-footer" aria-hidden="true" />
@@ -632,25 +648,13 @@ function HeroCard({ report, periodLabel }: { report: AITrafficReport; periodLabe
 
   return (
     <div className="px-6 py-7">
-      {/* Eyebrow with period badge */}
-      <div className="flex items-center gap-2 flex-wrap mb-4">
-        <p
-          className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
-          style={{ fontFamily: bodyFont }}
-        >
-          AI Referral Traffic · Verdict
-        </p>
-        <span
-          className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full"
-          style={{
-            fontFamily: bodyFont,
-            backgroundColor: "oklch(0.50 0.175 162 / 0.1)",
-            color: "oklch(0.50 0.175 162)",
-          }}
-        >
-          Last {periodLabel}
-        </span>
-      </div>
+      {/* Eyebrow */}
+      <p
+        className="text-[11px] tracking-widest uppercase text-muted-foreground/60 mb-4"
+        style={{ fontFamily: bodyFont }}
+      >
+        AI Referral Traffic · Verdict
+      </p>
 
       {/* Headline */}
       <h1
@@ -920,6 +924,20 @@ function TrendChart({
 
   const maxSessions = Math.max(...displayData.map((d) => d.sessions), 1);
 
+  const n = displayData.length;
+  const labelIndices = [...new Set(
+    n <= 2 ? [0, n - 1]
+    : n <= 7 ? [0, Math.floor(n / 2), n - 1]
+    : [0, Math.floor(n / 3), Math.floor((2 * n) / 3), n - 1]
+  )];
+
+  function fmtDate(yyyymmdd: string): string {
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const m = parseInt(yyyymmdd.slice(4, 6), 10) - 1;
+    const d = parseInt(yyyymmdd.slice(6, 8), 10);
+    return `${months[m]} ${d}`;
+  }
+
   return (
     <div className="rounded-xl border border-border bg-card px-4 pt-4 pb-3">
       <div className="flex items-end gap-px h-20">
@@ -930,25 +948,21 @@ function TrendChart({
               key={d.date}
               className={`flex-1 rounded-t transition-colors ${d.sessions > 0 ? "bg-primary/70 hover:bg-primary" : "bg-transparent"}`}
               style={{ height: d.sessions > 0 ? `${Math.max(height, 4)}%` : "0%" }}
-              title={`${d.date.slice(4, 6)}/${d.date.slice(6, 8)}: ${d.sessions} sessions`}
+              title={`${fmtDate(d.date)}: ${d.sessions} sessions`}
             />
           );
         })}
       </div>
       <div className="flex justify-between mt-2.5">
-        <p
-          className="text-[10px] text-muted-foreground/50"
-          style={{ fontFamily: bodyFont }}
-        >
-          {data[0]?.date?.slice(4, 6)}/{data[0]?.date?.slice(6, 8)}
-        </p>
-        <p
-          className="text-[10px] text-muted-foreground/50"
-          style={{ fontFamily: bodyFont }}
-        >
-          {data[data.length - 1]?.date?.slice(4, 6)}/
-          {data[data.length - 1]?.date?.slice(6, 8)}
-        </p>
+        {labelIndices.map((idx) => (
+          <p
+            key={idx}
+            className="text-[10px] text-muted-foreground/50"
+            style={{ fontFamily: bodyFont }}
+          >
+            {fmtDate(displayData[idx].date)}
+          </p>
+        ))}
       </div>
     </div>
   );
