@@ -128,12 +128,15 @@ const LOADING_MESSAGES = [
   "Crunching the numbers...",
 ];
 
+const AI_GRID_SIZE = 16;
+
 function formatPath(path: string): string {
   return path === "/" ? "/ (homepage)" : path;
 }
 
 function LoadingState() {
   const [msgIdx, setMsgIdx] = useState(0);
+  const [activeNodes, setActiveNodes] = useState<Set<number>>(() => new Set([0, 3, 5, 9, 12, 15]));
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -142,18 +145,69 @@ function LoadingState() {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveNodes((prev) => {
+        const next = new Set(prev);
+        const activeArr = [...next];
+        // deactivate 0–2 random nodes (keep at least 3)
+        const toOff = Math.floor(Math.random() * 3);
+        for (let i = 0; i < toOff && activeArr.length > 3; i++) {
+          next.delete(activeArr[Math.floor(Math.random() * activeArr.length)]);
+        }
+        // activate 1–3 random nodes
+        const toOn = 1 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < toOn && next.size < 11; i++) {
+          next.add(Math.floor(Math.random() * AI_GRID_SIZE));
+        }
+        return next;
+      });
+    }, 200);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 gap-5">
-      <div className="flex gap-1.5">
-        {(["animate-bounce", "animate-bounce [animation-delay:150ms]", "animate-bounce [animation-delay:300ms]"] as const).map((cls, i) => (
-          <span
-            key={i}
-            className={`w-2 h-2 rounded-full bg-primary ${cls}`}
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 gap-7">
+      {/* AI neural grid */}
+      <div className="relative flex flex-col items-center gap-5">
+        {/* Background glow */}
+        <div
+          className="absolute -inset-10 rounded-full blur-3xl pointer-events-none"
+          style={{ backgroundColor: "oklch(0.50 0.175 162 / 0.07)" }}
+        />
+        {/* 4×4 node grid */}
+        <div className="relative grid grid-cols-4 gap-[14px]">
+          {Array.from({ length: AI_GRID_SIZE }, (_, i) => (
+            <div
+              key={i}
+              className="w-2.5 h-2.5 rounded-full transition-all duration-150"
+              style={{
+                backgroundColor: activeNodes.has(i)
+                  ? "oklch(0.50 0.175 162)"
+                  : "oklch(0.50 0.175 162 / 0.12)",
+                boxShadow: activeNodes.has(i)
+                  ? "0 0 9px 3px oklch(0.50 0.175 162 / 0.35)"
+                  : "none",
+                transform: activeNodes.has(i) ? "scale(1.25)" : "scale(1)",
+              }}
+            />
+          ))}
+        </div>
+        {/* Scan beam */}
+        <div
+          className="w-24 h-px rounded-full overflow-hidden"
+          style={{ backgroundColor: "oklch(0.50 0.175 162 / 0.15)" }}
+        >
+          <div
+            className="ai-scan-beam h-full rounded-full"
+            style={{ backgroundColor: "oklch(0.50 0.175 162 / 0.65)", width: "38%" }}
           />
-        ))}
+        </div>
       </div>
+
+      {/* Message */}
       <p
-        className="text-sm text-muted-foreground"
+        className="text-sm text-muted-foreground text-center"
         style={{ fontFamily: bodyFont }}
       >
         {LOADING_MESSAGES[msgIdx]}
@@ -299,35 +353,35 @@ function ResultsPage() {
                       window.location.href = `/results?propertyId=${encodeURIComponent(propertyId)}&propertyName=${encodeURIComponent(propertyName)}&days=${opt.days}`;
                     }, 50);
                   }}
-                  className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1.5"
                   style={{ fontFamily: bodyFont }}
                 >
+                  {loadingPeriod === opt.days && (
+                    <span className="w-2.5 h-2.5 rounded-full border border-primary border-t-transparent animate-spin inline-block flex-none" />
+                  )}
                   {opt.label}
                 </button>
               )
             )}
           </div>
 
-          {/* Full-screen loading overlay — shown immediately on period click */}
-          {loadingPeriod !== null && (
-            <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-[2px] flex flex-col items-center justify-center gap-4">
-              <div className="flex gap-1.5">
-                {(["animate-bounce", "animate-bounce [animation-delay:150ms]", "animate-bounce [animation-delay:300ms]"] as const).map((cls, i) => (
-                  <span
-                    key={i}
-                    className={`w-2 h-2 rounded-full bg-primary ${cls}`}
-                  />
-                ))}
-              </div>
-              <p className="text-sm text-muted-foreground" style={{ fontFamily: bodyFont }}>
-                Loading {loadingPeriod === 7 ? "7 days" : loadingPeriod === 365 ? "12 months" : `${loadingPeriod} days`}...
-              </p>
-            </div>
-          )}
+          {/* Period-switch loading: just a small spinner on the clicked button (no full-screen overlay) */}
         </div>
 
+        {/* Content area — loading overlay scoped here, not full-screen */}
+        <div className="relative">
+          {loadingPeriod !== null && (
+            <div className="absolute inset-0 z-10 bg-background/70 backdrop-blur-[1px] rounded-xl flex items-start justify-center pt-16 pointer-events-none">
+              <div className="flex gap-1.5">
+                {(["animate-bounce", "animate-bounce [animation-delay:150ms]", "animate-bounce [animation-delay:300ms]"] as const).map((cls, i) => (
+                  <span key={i} className={`w-2 h-2 rounded-full bg-primary ${cls}`} />
+                ))}
+              </div>
+            </div>
+          )}
+
         {/* Desktop two-column grid */}
-        <div className="md:grid md:grid-cols-[1fr_340px] md:gap-8 lg:grid-cols-[1fr_380px]">
+        <div className={`md:grid md:grid-cols-[1fr_340px] md:gap-8 lg:grid-cols-[1fr_380px] ${loadingPeriod !== null ? "opacity-40 pointer-events-none select-none" : ""}`}>
 
           {/* LEFT COLUMN */}
           <div>
@@ -363,9 +417,9 @@ function ResultsPage() {
                 className="text-[11px] tracking-widest uppercase text-muted-foreground/60 mb-3"
                 style={{ fontFamily: bodyFont }}
               >
-                What this means
+                Summary in plain words
               </h2>
-              <div className="rounded-xl bg-muted/40 border border-border/60 px-5 py-4 space-y-3">
+              <div className="rounded-xl bg-muted/40 border border-border/60 px-5 py-4">
                 <WhatThisMeans report={report} periodLabel={periodLabel} />
               </div>
             </section>
@@ -543,6 +597,7 @@ function ResultsPage() {
             </section>
           </div>
         </div>
+        </div>{/* end content-area relative wrapper */}
 
         {/* Print-only footer — hidden on screen, visible in print */}
         <div className="print-footer" aria-hidden="true" />
@@ -577,13 +632,25 @@ function HeroCard({ report, periodLabel }: { report: AITrafficReport; periodLabe
 
   return (
     <div className="px-6 py-7">
-      {/* Eyebrow */}
-      <p
-        className="text-[11px] tracking-widest uppercase text-muted-foreground/60 mb-4"
-        style={{ fontFamily: bodyFont }}
-      >
-        AI Referral Traffic · Verdict
-      </p>
+      {/* Eyebrow with period badge */}
+      <div className="flex items-center gap-2 flex-wrap mb-4">
+        <p
+          className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
+          style={{ fontFamily: bodyFont }}
+        >
+          AI Referral Traffic · Verdict
+        </p>
+        <span
+          className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full"
+          style={{
+            fontFamily: bodyFont,
+            backgroundColor: "oklch(0.50 0.175 162 / 0.1)",
+            color: "oklch(0.50 0.175 162)",
+          }}
+        >
+          Last {periodLabel}
+        </span>
+      </div>
 
       {/* Headline */}
       <h1
@@ -727,7 +794,7 @@ function SourceList({
           >
             {/* Proportional fill bar */}
             <div
-              className="absolute inset-y-0 left-0 bg-primary/6 pointer-events-none"
+              className="absolute inset-y-0 left-0 bg-primary/[0.12] pointer-events-none"
               style={{ width: `${(s.sessions / max) * 100}%` }}
             />
             <div className="relative flex items-center justify-between">
@@ -1019,16 +1086,21 @@ function WhatThisMeans({ report, periodLabel }: { report: AITrafficReport; perio
   );
 
   return (
-    <>
+    <ul className="space-y-2.5">
       {insights.map((insight, i) => (
-        <p
-          key={i}
-          className="text-sm text-muted-foreground leading-relaxed"
-          style={{ fontFamily: bodyFont }}
-        >
-          {insight}
-        </p>
+        <li key={i} className="flex items-start gap-2.5">
+          <span
+            className="mt-[0.4em] w-1.5 h-1.5 rounded-full flex-none"
+            style={{ backgroundColor: "oklch(0.50 0.175 162 / 0.55)" }}
+          />
+          <p
+            className="text-sm text-muted-foreground leading-relaxed"
+            style={{ fontFamily: bodyFont }}
+          >
+            {insight}
+          </p>
+        </li>
       ))}
-    </>
+    </ul>
   );
 }

@@ -143,6 +143,15 @@
 .animate-delay-500 { animation-delay: 0.5s; }
 .animate-delay-600 { animation-delay: 0.6s; }
 
+/* AI loading scan beam */
+@keyframes ai-scan {
+  0%   { transform: translateX(-150%); }
+  100% { transform: translateX(350%); }
+}
+.ai-scan-beam {
+  animation: ai-scan 1.5s ease-in-out infinite;
+}
+
 /* Hide print footer on screen */
 .print-footer { display: none; }
 
