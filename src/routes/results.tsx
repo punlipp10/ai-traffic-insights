@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { fetchAITrafficReport } from "@/lib/ga4.functions";
 import { saveScan } from "@/lib/tracking.functions";
 import type { AITrafficReport } from "@/lib/ai-sources";
@@ -213,42 +213,17 @@ function LoadingState() {
   );
 }
 
-function extractPropertyDomain(name: string): string | null {
-  const cleaned = name
-    .replace(/\s*[-|:]\s*(production|staging|dev|development|test|qa|prod|ga4|analytics|website|web|app|site)\s*$/gi, '')
-    .trim();
-  if (!cleaned) return null;
-  if (/\.[a-z]{2,}$/i.test(cleaned)) return cleaned.toLowerCase();
-  const slug = cleaned.toLowerCase().replace(/[^a-z0-9]/g, '');
-  if (slug.length < 3 || slug.length > 25) return null;
-  return `${slug}.com`;
-}
-
-function PropertyLogo({ propertyName }: { propertyName: string }) {
-  const [failed, setFailed] = useState(false);
-  const domain = extractPropertyDomain(propertyName);
-  if (!domain || failed) return null;
-  return (
-    <img
-      src={`https://img.logo.dev/${domain}?token=${LOGO_DEV_KEY}&size=32&format=png`}
-      alt={propertyName}
-      width={20}
-      height={20}
-      className="w-5 h-5 rounded-sm object-contain flex-none"
-      onError={() => setFailed(true)}
-    />
-  );
-}
-
 function ResultsPage() {
   const { report, error } = Route.useLoaderData();
   const { propertyId, propertyName, days } = Route.useSearch();
   const navigate = useNavigate();
   const [copied, setCopied] = useState<"summary" | "error" | null>(null);
   const [loadingPeriod, setLoadingPeriod] = useState<number | null>(null);
+  const loadedKeys = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!report || error) return;
+    loadedKeys.current.add(`${propertyId}:${days}`);
     trackEvent("report_viewed", {
       days_selected: days,
       result_state: report.state,
@@ -351,7 +326,6 @@ function ResultsPage() {
                 <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
               </svg>
             </a>
-            <PropertyLogo propertyName={report.propertyName} />
             <p
               className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
               style={{ fontFamily: bodyFont }}
@@ -380,10 +354,12 @@ function ResultsPage() {
                       from_days: days,
                       to_days: opt.days,
                     });
-                    setLoadingPeriod(opt.days);
+                    const isCached = loadedKeys.current.has(`${propertyId}:${opt.days}`);
+                    if (!isCached) {
+                      setLoadingPeriod(opt.days);
+                      setTimeout(() => setLoadingPeriod(null), 5000);
+                    }
                     void navigate({ to: "/results", search: { propertyId, propertyName, days: opt.days } });
-                    // Reset after navigation starts so spinner doesn't linger
-                    setTimeout(() => setLoadingPeriod(null), 5000);
                   }}
                   className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1.5"
                   style={{ fontFamily: bodyFont }}

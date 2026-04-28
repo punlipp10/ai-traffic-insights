@@ -22,6 +22,90 @@ function BouncingDots() {
   );
 }
 
+const AI_GRID_SIZE = 16;
+const AI_LOADING_MESSAGES = [
+  "Fetching your analytics data...",
+  "Looking for AI referral traffic...",
+  "Finding top pages...",
+  "Crunching the numbers...",
+];
+
+function AILoadingOverlay() {
+  const [msgIdx, setMsgIdx] = useState(0);
+  const [activeNodes, setActiveNodes] = useState<Set<number>>(
+    () => new Set([0, 3, 5, 9, 12, 15])
+  );
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setMsgIdx((i) => (i + 1) % AI_LOADING_MESSAGES.length);
+    }, 1800);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setActiveNodes((prev) => {
+        const next = new Set(prev);
+        const arr = [...next];
+        const toOff = Math.floor(Math.random() * 3);
+        for (let i = 0; i < toOff && arr.length > 3; i++) {
+          next.delete(arr[Math.floor(Math.random() * arr.length)]);
+        }
+        const toOn = 1 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < toOn && next.size < 11; i++) {
+          next.add(Math.floor(Math.random() * AI_GRID_SIZE));
+        }
+        return next;
+      });
+    }, 200);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center px-6 gap-7">
+      <div className="relative flex flex-col items-center gap-5">
+        <div
+          className="absolute -inset-10 rounded-full blur-3xl pointer-events-none"
+          style={{ backgroundColor: "oklch(0.50 0.175 162 / 0.07)" }}
+        />
+        <div className="relative grid grid-cols-4 gap-[14px]">
+          {Array.from({ length: AI_GRID_SIZE }, (_, i) => (
+            <div
+              key={i}
+              className="w-2.5 h-2.5 rounded-full transition-all duration-150"
+              style={{
+                backgroundColor: activeNodes.has(i)
+                  ? "oklch(0.50 0.175 162)"
+                  : "oklch(0.50 0.175 162 / 0.12)",
+                boxShadow: activeNodes.has(i)
+                  ? "0 0 9px 3px oklch(0.50 0.175 162 / 0.35)"
+                  : "none",
+                transform: activeNodes.has(i) ? "scale(1.25)" : "scale(1)",
+              }}
+            />
+          ))}
+        </div>
+        <div
+          className="w-24 h-px rounded-full overflow-hidden"
+          style={{ backgroundColor: "oklch(0.50 0.175 162 / 0.15)" }}
+        >
+          <div
+            className="ai-scan-beam h-full rounded-full"
+            style={{ backgroundColor: "oklch(0.50 0.175 162 / 0.65)", width: "38%" }}
+          />
+        </div>
+      </div>
+      <p
+        className="text-sm text-muted-foreground text-center"
+        style={{ fontFamily: bodyFont }}
+      >
+        {AI_LOADING_MESSAGES[msgIdx]}
+      </p>
+    </div>
+  );
+}
+
 export const Route = createFileRoute("/connect")({
   head: () => ({
     meta: [
@@ -173,6 +257,7 @@ function ConnectPage() {
   // Property list
   return (
     <div className="min-h-screen bg-background">
+      {loadingProperty !== null && <AILoadingOverlay />}
       <div className="max-w-2xl mx-auto px-5 py-10 md:px-10 md:py-16">
 
         {/* Header */}
