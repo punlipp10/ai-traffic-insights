@@ -5,6 +5,19 @@ import { saveScan } from "@/lib/tracking.functions";
 import type { AITrafficReport } from "@/lib/ai-sources";
 import { trackEvent } from "@/lib/analytics";
 
+// ── GA4 property list (localStorage, written by /connect, read here) ────────
+const GA4_PROPS_KEY = "ga4_properties";
+
+type RecentProperty = { propertyId: string; propertyName: string };
+
+function getKnownProperties(): RecentProperty[] {
+  try {
+    return JSON.parse(localStorage.getItem(GA4_PROPS_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
 const displayFont = "'Barlow Condensed', sans-serif";
 const bodyFont = "'Figtree', sans-serif";
 
@@ -308,7 +321,37 @@ function ResultsPage() {
   const navigate = useNavigate();
   const [copied, setCopied] = useState<"summary" | "error" | null>(null);
   const [loadingPeriod, setLoadingPeriod] = useState<number | null>(null);
+  const [recentProps, setRecentProps] = useState<RecentProperty[]>([]);
+  const [showPropDropdown, setShowPropDropdown] = useState(false);
+  const propDropdownRef = useRef<HTMLDivElement>(null);
   const loadedKeys = useRef<Set<string>>(new Set());
+
+  // Load the property list written by /connect
+  useEffect(() => {
+    setRecentProps(getKnownProperties());
+  }, [propertyId]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!showPropDropdown) return;
+    function handleClick(e: MouseEvent) {
+      if (propDropdownRef.current && !propDropdownRef.current.contains(e.target as Node)) {
+        setShowPropDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showPropDropdown]);
+
+  useEffect(() => {
+    if (!report || error || !propertyId || propertyId === "demo") return;
+    try {
+      const visited: string[] = JSON.parse(localStorage.getItem("visited_ga4_properties") ?? "[]");
+      if (!visited.includes(propertyId)) {
+        localStorage.setItem("visited_ga4_properties", JSON.stringify([...visited, propertyId]));
+      }
+    } catch { /* best-effort */ }
+  }, [propertyId, report, error]);
 
   useEffect(() => {
     if (!report || error) return;
@@ -415,11 +458,79 @@ function ResultsPage() {
                 <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
               </svg>
             </a>
+
+            {/* Property switcher — dropdown when there are multiple recent properties */}
+            {recentProps.length > 1 ? (
+              <div ref={propDropdownRef} className="relative print-hide">
+                <button
+                  type="button"
+                  onClick={() => setShowPropDropdown((v) => !v)}
+                  className="flex items-center gap-1 text-[11px] tracking-widest uppercase text-muted-foreground/60 hover:text-muted-foreground transition-colors cursor-pointer group"
+                  style={{ fontFamily: bodyFont }}
+                >
+                  {report?.propertyName ?? propertyName} · Last {periodLabel}
+                  <svg
+                    className={`w-3 h-3 transition-transform ${showPropDropdown ? "rotate-180" : ""}`}
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+
+                {showPropDropdown && (
+                  <div className="absolute top-full left-0 mt-1.5 z-30 min-w-[220px] rounded-xl border border-border bg-card shadow-lg overflow-hidden">
+                    {recentProps.map((rp) => (
+                      <button
+                        key={rp.propertyId}
+                        type="button"
+                        onClick={() => {
+                          setShowPropDropdown(false);
+                          if (rp.propertyId === propertyId) return;
+                          trackEvent("recent_property_switched", { source: "results_dropdown" });
+                          void navigate({ to: "/results", search: { propertyId: rp.propertyId, propertyName: rp.propertyName, days } });
+                        }}
+                        className={`block w-full text-left px-4 py-2.5 text-xs hover:bg-muted/50 transition-colors ${rp.propertyId === propertyId ? "text-primary font-semibold" : "text-muted-foreground"}`}
+                        style={{ fontFamily: bodyFont }}
+                      >
+                        {rp.propertyName}
+                        {rp.propertyId === propertyId && (
+                          <span className="ml-1.5 text-[10px] text-primary/60">current</span>
+                        )}
+                      </button>
+                    ))}
+                    <div className="border-t border-border/60 px-4 py-2">
+                      <Link
+                        to="/connect"
+                        onClick={() => {
+                          setShowPropDropdown(false);
+                          trackEvent("check_another_property_clicked", { source: "results_dropdown" });
+                        }}
+                        className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                        style={{ fontFamily: bodyFont }}
+                      >
+                        + Add another property
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p
+                className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
+                style={{ fontFamily: bodyFont }}
+              >
+                {report?.propertyName ?? propertyName} · Last {periodLabel}
+              </p>
+            )}
+
+            {/* Print-only static label */}
             <p
-              className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
+              className="hidden text-[11px] tracking-widest uppercase text-muted-foreground/60 print-show"
               style={{ fontFamily: bodyFont }}
             >
-              {report.propertyName} · Last {periodLabel}
+              {report?.propertyName ?? propertyName} · Last {periodLabel}
             </p>
           </div>
 

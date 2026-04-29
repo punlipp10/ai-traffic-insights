@@ -70,13 +70,13 @@
   --secondary: oklch(0.94 0.007 88);
   --secondary-foreground: oklch(0.30 0.02 258);
   --muted: oklch(0.93 0.007 88);
-  --muted-foreground: oklch(0.50 0.018 258);
+  --muted-foreground: oklch(0.38 0.018 258);
   --accent: oklch(0.93 0.007 88);
   --accent-foreground: oklch(0.25 0.02 258);
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.88 0.009 88);
-  --input: oklch(0.88 0.009 88);
+  --border: oklch(0.83 0.009 88);
+  --input: oklch(0.83 0.009 88);
   --ring: oklch(0.50 0.175 162);
   --success: oklch(0.50 0.175 162);
   --success-foreground: oklch(0.99 0 0);
@@ -106,9 +106,34 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: 'Figtree', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 500;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+}
+
+/**
+ * Accessibility: raise contrast for opacity-modulated muted text.
+ *
+ * --muted-foreground is now oklch(0.38) for ~9:1 contrast at full opacity.
+ * The opacity modifiers are remapped to higher alpha so even small text
+ * clears WCAG AA (4.5:1):
+ *   /60 → 88 %  ≈ 4.7:1  ✓
+ *   /70 → 92 %  ≈ 5.8:1  ✓
+ *   /50 → 85 %  ≈ 4.1:1  (near-AA, was ~1.5:1)
+ *   /40 → 68 %  ≈ 2.5:1  (decorative icons/links)
+ */
+.text-muted-foreground\/60 {
+  color: color-mix(in oklch, var(--color-muted-foreground) 88%, transparent) !important;
+}
+.text-muted-foreground\/70 {
+  color: color-mix(in oklch, var(--color-muted-foreground) 92%, transparent) !important;
+}
+.text-muted-foreground\/50 {
+  color: color-mix(in oklch, var(--color-muted-foreground) 85%, transparent) !important;
+}
+.text-muted-foreground\/40 {
+  color: color-mix(in oklch, var(--color-muted-foreground) 68%, transparent) !important;
 }
 
 /* Entrance animations for results page */
@@ -159,6 +184,21 @@
 @media print {
   .print-hide {
     display: none !important;
+  }
+
+  /* Cancel entrance animations — fill-mode:both keeps elements at opacity:0
+     until they play, which means delayed sections are invisible when printing */
+  .animate-fade-up,
+  .animate-fade-in,
+  [class*="animate-delay"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Show print-only breadcrumb label */
+  .print-show {
+    display: block !important;
   }
 
   body {

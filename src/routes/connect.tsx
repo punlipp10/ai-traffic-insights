@@ -152,6 +152,14 @@ function ConnectPage() {
   const navigate = useNavigate();
   const [disconnecting, setDisconnecting] = useState(false);
   const [loadingProperty, setLoadingProperty] = useState<string | null>(null);
+  const [visitedIds, setVisitedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try {
+      const ids: string[] = JSON.parse(localStorage.getItem("visited_ga4_properties") ?? "[]");
+      setVisitedIds(new Set(ids));
+    } catch { /* best-effort */ }
+  }, []);
 
   useEffect(() => {
     trackEvent("ga4_property_list_viewed", {
@@ -159,6 +167,16 @@ function ConnectPage() {
       properties_available_count: properties.length,
     });
   }, [error, properties.length]);
+
+  // Persist the full property list so /results can show a quick-switch dropdown
+  useEffect(() => {
+    if (!isDemo && properties.length > 0) {
+      try {
+        const list = properties.map((p: GA4Property) => ({ propertyId: p.propertyId, propertyName: p.displayName }));
+        localStorage.setItem("ga4_properties", JSON.stringify(list));
+      } catch { /* best-effort */ }
+    }
+  }, [isDemo, properties]);
 
   const handleDisconnect = async () => {
     trackEvent("google_disconnect_click", { source: "connect" });
@@ -347,7 +365,23 @@ function ConnectPage() {
                       {prop.accountName} · {prop.propertyId}
                     </p>
                   </div>
-                  {loadingProperty === prop.propertyId && <BouncingDots />}
+                  <div className="flex items-center gap-2 flex-none">
+                    {visitedIds.has(prop.propertyId) && loadingProperty !== prop.propertyId && (
+                      <span
+                        title="You've checked this property before"
+                        className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md"
+                        style={{
+                          fontFamily: bodyFont,
+                          color: "oklch(0.44 0.14 162)",
+                          backgroundColor: "oklch(0.50 0.175 162 / 0.1)",
+                        }}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full flex-none" style={{ backgroundColor: "oklch(0.50 0.175 162)" }} />
+                        Viewed
+                      </span>
+                    )}
+                    {loadingProperty === prop.propertyId && <BouncingDots />}
+                  </div>
                 </div>
               </button>
             )
