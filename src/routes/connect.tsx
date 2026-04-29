@@ -114,7 +114,7 @@ const DEMO_PROPERTIES: GA4Property[] = [
 
 export const Route = createFileRoute("/connect")({
   validateSearch: (search) => ({
-    demo: search.demo === "1" || search.demo === true,
+    demo: search.demo === "1" || search.demo === 1 || search.demo === true,
   }),
   head: () => ({
     meta: [
