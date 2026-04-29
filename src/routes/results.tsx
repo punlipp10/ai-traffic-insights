@@ -779,10 +779,10 @@ function HeroCard({ report, periodLabel }: { report: AITrafficReport; periodLabe
               sessions in the last {periodLabel}
               {report.changePercent !== null && report.prevAISessions > 0 && (
                 <span
-                  className={`block sm:inline sm:ml-2 mt-0.5 sm:mt-0 font-semibold ${
+                  className={`block sm:inline sm:ml-2 mt-0.5 sm:mt-0 font-medium ${
                     report.changePercent > 0
                       ? "text-primary"
-                      : "text-destructive"
+                      : "text-muted-foreground/60"
                   }`}
                 >
                   ({report.changePercent > 0 ? "+" : ""}
