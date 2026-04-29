@@ -10,6 +10,7 @@ interface SessionData {
   googleAccessToken?: string;
   googleRefreshToken?: string;
   googleTokenExpiry?: number;
+  googleEmail?: string;
 }
 
 function getSessionConfig() {
@@ -79,10 +80,25 @@ export const exchangeGoogleCode = createServerFn({ method: "POST" })
       throw new Error("Failed to authenticate with Google");
     }
 
+    // Fetch the user's email from Google
+    let googleEmail: string | undefined;
+    try {
+      const userRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+      if (userRes.ok) {
+        const userInfo = await userRes.json();
+        googleEmail = userInfo.email;
+      }
+    } catch {
+      // non-fatal
+    }
+
     await updateSession<SessionData>(getSessionConfig(), {
       googleAccessToken: tokens.access_token,
       googleRefreshToken: tokens.refresh_token,
       googleTokenExpiry: Date.now() + tokens.expires_in * 1000,
+      googleEmail,
     });
 
     return { success: true };
