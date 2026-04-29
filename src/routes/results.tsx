@@ -880,6 +880,7 @@ function SourceList({
 }) {
   const [expanded, setExpanded] = useState(false);
   const INITIAL_COUNT = 5;
+  const total = sources.reduce((sum, s) => sum + s.sessions, 0);
   const max = Math.max(...sources.map((s) => s.sessions), 1);
   const visible = expanded ? sources : sources.slice(0, INITIAL_COUNT);
   const hasMore = sources.length > INITIAL_COUNT;
@@ -930,7 +931,7 @@ function SourceList({
                   className="text-[11px] text-muted-foreground/70"
                   style={{ fontFamily: bodyFont }}
                 >
-                  sessions
+                  {total > 0 ? `${Math.round((s.sessions / total) * 100)}%` : ""}
                 </p>
               </div>
             </div>

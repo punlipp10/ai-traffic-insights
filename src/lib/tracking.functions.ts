@@ -44,15 +44,20 @@ export const saveScan = createServerFn({ method: "POST" })
 
       const { report, propertyId } = data;
 
-      // Skip re-insert if same property + period already scanned within 7 days
-      const { data: existing } = await supabase
+      // Skip re-insert if same user + property + period already scanned within 7 days
+      const dedupeQuery = supabase
         .from("aisendingme_scans")
         .select("id")
         .eq("ga4_property_id", propertyId)
         .eq("days_analyzed", report.days)
-        .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-        .limit(1)
-        .maybeSingle();
+        .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+
+      // Scope dedup to the user's email when available, otherwise property-level
+      if (googleEmail) {
+        dedupeQuery.eq("google_email", googleEmail);
+      }
+
+      const { data: existing } = await dedupeQuery.limit(1).maybeSingle();
 
       if (existing) {
         console.log("[tracking] Skipping duplicate scan (cached within 7 days)");
