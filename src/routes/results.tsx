@@ -367,6 +367,15 @@ function ResultsPage() {
   }, [days, error, report]);
 
   if (error || !report) {
+    // Sanitise error: strip HTML tags (e.g. Google 429 error pages) and cap length
+    const safeError = (() => {
+      if (!error || error === "no_property") return error;
+      const stripped = error.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+      return stripped.length > 300 ? stripped.slice(0, 297) + "…" : stripped;
+    })();
+
+    const is429 = error?.includes("429") || error?.includes("rate limit");
+
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-6">
         <div className="text-center space-y-4 max-w-xs">
@@ -374,21 +383,23 @@ function ResultsPage() {
             className="text-3xl text-foreground tracking-tight"
             style={{ fontFamily: displayFont }}
           >
-            Something went wrong
+            {is429 ? "Too many requests" : "Something went wrong"}
           </h1>
           <p
             className="text-sm text-muted-foreground"
             style={{ fontFamily: bodyFont }}
           >
-            {error === "no_property"
+            {safeError === "no_property"
               ? "No property selected. Pick one first."
-              : "We couldn't fetch your analytics data."}
+              : is429
+                ? "Google Analytics is temporarily throttling requests. Wait a minute, then try again."
+                : "We couldn't fetch your analytics data."}
           </p>
-          {error && error !== "no_property" && (
+          {safeError && safeError !== "no_property" && !is429 && (
             <p
               className="text-xs font-mono bg-muted rounded-lg px-3 py-2 text-left text-muted-foreground break-all"
             >
-              {error}
+              {safeError}
             </p>
           )}
           <div className="flex gap-3 justify-center pt-2">

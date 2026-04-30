@@ -73,11 +73,17 @@ export const listGA4Properties = createServerFn({ method: "GET" }).handler(
     if (!response.ok) {
       const err = await response.text();
       console.error("GA4 accountSummaries error:", err);
-      let detail = err;
-      try {
-        const parsed = JSON.parse(err);
-        detail = parsed?.error?.message || err;
-      } catch {}
+      if (response.status === 429) {
+        throw new Error("GA4 rate limit reached (429). Please wait a minute and try again.");
+      }
+      const isHtml = err.trimStart().startsWith("<");
+      let detail = isHtml ? `HTTP ${response.status} error from Google Analytics API.` : err;
+      if (!isHtml) {
+        try {
+          const parsed = JSON.parse(err);
+          detail = parsed?.error?.message || err;
+        } catch {}
+      }
       throw new Error(`GA4 API error (${response.status}): ${detail}`);
     }
 
@@ -400,11 +406,18 @@ async function runGA4Report(
   if (!response.ok) {
     const err = await response.text();
     console.error("GA4 runReport error:", response.status, err);
-    let detail = err;
-    try {
-      const parsed = JSON.parse(err);
-      detail = parsed?.error?.message || err;
-    } catch {}
+    if (response.status === 429) {
+      throw new Error("GA4 rate limit reached (429). Google has temporarily throttled requests — please wait a minute and try again.");
+    }
+    // If Google returns an HTML error page, don't leak it to the UI
+    const isHtml = err.trimStart().startsWith("<");
+    let detail = isHtml ? `HTTP ${response.status} error from Google Analytics API.` : err;
+    if (!isHtml) {
+      try {
+        const parsed = JSON.parse(err);
+        detail = parsed?.error?.message || err;
+      } catch {}
+    }
     throw new Error(`GA4 report error (${response.status}): ${detail}`);
   }
 
