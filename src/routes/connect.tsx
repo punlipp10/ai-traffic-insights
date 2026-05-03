@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { listGA4Properties } from "@/lib/ga4.functions";
 import { logoutGoogle } from "@/lib/auth.functions";
+import { getBingStatusAndSites, disconnectBing } from "@/lib/bing.functions";
 import type { GA4Property } from "@/lib/ai-sources";
 import { trackEvent } from "@/lib/analytics";
 
@@ -115,6 +116,8 @@ const DEMO_PROPERTIES: GA4Property[] = [
 export const Route = createFileRoute("/connect")({
   validateSearch: (search) => ({
     demo: search.demo === "1" || search.demo === 1 || search.demo === true,
+    bingConnected: search.bing_connected === "1",
+    bingError: search.bing_error === "1",
   }),
   head: () => ({
     meta: [
@@ -125,34 +128,51 @@ export const Route = createFileRoute("/connect")({
   }),
   loaderDeps: ({ search }) => ({ demo: search.demo }),
   loader: async ({ deps }) => {
+    const emptyBing = { connected: false, sites: [] as string[] };
     if (deps.demo) {
-      return { properties: DEMO_PROPERTIES, error: null, isDemo: true };
+      return { properties: DEMO_PROPERTIES, error: null, isDemo: true, bingStatus: emptyBing };
     }
+
+    let ga4Properties: GA4Property[] = [];
+    let ga4Error: string | null = null;
+
     try {
       const result = await listGA4Properties();
-      return { properties: result.properties, error: null, isDemo: false };
+      ga4Properties = result.properties;
     } catch (e: unknown) {
       const msg = (e as Error).message || "";
       const isAuthError =
         msg.includes("Not authenticated") ||
         msg.includes("No refresh token") ||
         msg.toLowerCase().includes("not authenticated");
-      return {
-        properties: [] as GA4Property[],
-        error: isAuthError ? "not_authenticated" : `api_error: ${msg}`,
-        isDemo: false,
-      };
+      ga4Error = isAuthError ? "not_authenticated" : `api_error: ${msg}`;
     }
+
+    let bingStatus = emptyBing;
+    try {
+      bingStatus = await getBingStatusAndSites();
+    } catch {
+      // non-fatal — Bing is optional
+    }
+
+    if (ga4Error) {
+      return { properties: [] as GA4Property[], error: ga4Error, isDemo: false, bingStatus };
+    }
+
+    return { properties: ga4Properties, error: null, isDemo: false, bingStatus };
   },
   component: ConnectPage,
 });
 
 function ConnectPage() {
-  const { properties, error, isDemo } = Route.useLoaderData();
+  const { properties, error, isDemo, bingStatus } = Route.useLoaderData();
+  const { bingConnected, bingError } = Route.useSearch();
   const navigate = useNavigate();
   const [disconnecting, setDisconnecting] = useState(false);
   const [loadingProperty, setLoadingProperty] = useState<string | null>(null);
   const [visitedIds, setVisitedIds] = useState<Set<string>>(new Set());
+  const [selectedBingSite, setSelectedBingSite] = useState<string>("");
+  const [disconnectingBing, setDisconnectingBing] = useState(false);
 
   useEffect(() => {
     try {
@@ -160,6 +180,31 @@ function ConnectPage() {
       setVisitedIds(new Set(ids));
     } catch { /* best-effort */ }
   }, []);
+
+  useEffect(() => {
+    try {
+      const site = localStorage.getItem("bing_site") || "";
+      setSelectedBingSite(site);
+    } catch { /* best-effort */ }
+  }, []);
+
+  const handleBingSiteSelect = (siteUrl: string) => {
+    const next = selectedBingSite === siteUrl ? "" : siteUrl;
+    setSelectedBingSite(next);
+    try {
+      if (next) localStorage.setItem("bing_site", next);
+      else localStorage.removeItem("bing_site");
+    } catch { /* best-effort */ }
+  };
+
+  const handleBingDisconnect = async () => {
+    setDisconnectingBing(true);
+    try {
+      await disconnectBing();
+      localStorage.removeItem("bing_site");
+    } catch { /* best-effort */ }
+    window.location.href = "/connect";
+  };
 
   useEffect(() => {
     trackEvent("ga4_property_list_viewed", {
@@ -343,7 +388,7 @@ function ConnectPage() {
                   setLoadingProperty(prop.propertyId);
                   void navigate({
                     to: "/results",
-                    search: { propertyId: prop.propertyId, propertyName: prop.displayName, days: 30 },
+                    search: { propertyId: prop.propertyId, propertyName: prop.displayName, days: 30, bingSiteUrl: selectedBingSite || "" },
                   });
                 }}
                 className={`block w-full text-left px-5 py-4 hover:bg-muted/40 active:bg-muted/70 transition-colors ${
@@ -387,6 +432,144 @@ function ConnectPage() {
             )
           )}
         </div>
+
+        {/* Bing Webmaster Tools — hidden for now */}
+        {false && !isDemo && (
+          <section className="mt-8 animate-fade-up animate-delay-200">
+            <div className="flex items-center gap-2 mb-3">
+              <p
+                className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
+                style={{ fontFamily: bodyFont }}
+              >
+                Bing Webmaster Tools
+              </p>
+              <span
+                className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground/50"
+                style={{ fontFamily: bodyFont }}
+              >
+                Optional
+              </span>
+            </div>
+
+            {bingConnected && !bingStatus.connected && (
+              <p
+                className="text-xs text-primary mb-2"
+                style={{ fontFamily: bodyFont }}
+              >
+                Bing connected — loading sites…
+              </p>
+            )}
+
+            {bingStatus.connected ? (
+              <div className="rounded-xl border border-border bg-card overflow-hidden">
+                {bingStatus.sites.length === 0 ? (
+                  <div className="px-5 py-4">
+                    <p
+                      className="text-sm text-muted-foreground"
+                      style={{ fontFamily: bodyFont }}
+                    >
+                      No verified sites found.{" "}
+                      <a
+                        href="https://www.bing.com/webmasters"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary"
+                      >
+                        Add a site in BWT →
+                      </a>
+                    </p>
+                  </div>
+                ) : (
+                  bingStatus.sites.map((siteUrl, idx) => (
+                    <button
+                      key={siteUrl}
+                      type="button"
+                      onClick={() => handleBingSiteSelect(siteUrl)}
+                      className={`block w-full text-left px-5 py-3.5 hover:bg-muted/40 active:bg-muted/70 transition-colors ${
+                        idx < bingStatus.sites.length - 1 ? "border-b border-border/50" : ""
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <p
+                          className="text-sm text-foreground truncate"
+                          style={{ fontFamily: bodyFont }}
+                        >
+                          {siteUrl}
+                        </p>
+                        {selectedBingSite === siteUrl && (
+                          <span
+                            className="flex-none text-xs font-semibold px-2 py-0.5 rounded-full"
+                            style={{
+                              fontFamily: bodyFont,
+                              color: "oklch(0.44 0.14 162)",
+                              backgroundColor: "oklch(0.50 0.175 162 / 0.1)",
+                            }}
+                          >
+                            Selected
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))
+                )}
+                <div className="border-t border-border/60 px-5 py-3 flex items-center justify-between gap-3">
+                  <p
+                    className="text-[11px] text-muted-foreground/50"
+                    style={{ fontFamily: bodyFont }}
+                  >
+                    {selectedBingSite
+                      ? "Bing data will be included in your report"
+                      : "Select a site to include Bing data in your report"}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleBingDisconnect}
+                    disabled={disconnectingBing}
+                    className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors disabled:opacity-40 flex-none"
+                    style={{ fontFamily: bodyFont }}
+                  >
+                    {disconnectingBing ? "Disconnecting…" : "Disconnect"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-border bg-card px-5 py-5">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className="font-semibold text-sm text-foreground mb-1"
+                      style={{ fontFamily: bodyFont }}
+                    >
+                      Add Bing Search + Copilot data
+                    </p>
+                    <p
+                      className="text-xs text-muted-foreground/70"
+                      style={{ fontFamily: bodyFont }}
+                    >
+                      See how your site ranks in Bing and when it appears in Copilot answers.
+                    </p>
+                    {bingError && (
+                      <p
+                        className="text-xs text-red-500 mt-2"
+                        style={{ fontFamily: bodyFont }}
+                      >
+                        Connection failed — please try again.
+                      </p>
+                    )}
+                  </div>
+                  <a
+                    href="/auth/bing"
+                    onClick={() => trackEvent("connect_bing_click", { source: "connect" })}
+                    className="flex-none inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors"
+                    style={{ fontFamily: bodyFont }}
+                  >
+                    Connect Bing
+                  </a>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
 
         <footer className="mt-16 text-center space-y-1">
           <p

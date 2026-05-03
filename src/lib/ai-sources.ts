@@ -93,6 +93,8 @@ export interface AITrafficReport {
   totalAIUsers: number;
   totalAINewUsers: number;
   changePercent: number | null;
+  totalAIConversions: number;
+  aiConversionRate: number | null;
   topSource: { label: string; sessions: number } | null;
   topPage: { path: string; sessions: number } | null;
   pagesWithAITraffic: number;
@@ -102,6 +104,7 @@ export interface AITrafficReport {
     category: "known" | "possible";
     sessions: number;
     users: number;
+    conversions: number;
   }>;
   topPages: Array<{
     path: string;
@@ -114,6 +117,10 @@ export interface AITrafficReport {
   topOrganicPages: Array<{
     path: string;
     sessions: number;
+  }>;
+  conversionEvents: Array<{
+    eventName: string;
+    conversions: number;
   }>;
   state: "meaningful" | "low" | "none";
   domain: string | null;

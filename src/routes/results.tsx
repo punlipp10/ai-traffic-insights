@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { fetchAITrafficReport } from "@/lib/ga4.functions";
+import { fetchBingCopilotData } from "@/lib/bing.functions";
+import type { BingCopilotData } from "@/lib/bing.functions";
 import { saveScan } from "@/lib/tracking.functions";
 import type { AITrafficReport } from "@/lib/ai-sources";
 import { trackEvent } from "@/lib/analytics";
@@ -20,6 +22,68 @@ function getKnownProperties(): RecentProperty[] {
 
 const displayFont = "'Barlow Condensed', sans-serif";
 const bodyFont = "'Figtree', sans-serif";
+
+// ── BWT AI Performance CSV helpers ──────────────────────────────────────────
+const BWT_CSV_LS_PREFIX = "bwt_ai_perf_";
+
+interface BwtCsvRow {
+  dateStr: string; // "YYYY-MM-DD"
+  citations: number;
+  citedPages: number;
+}
+
+function parseBwtCsv(text: string): BwtCsvRow[] {
+  const lines = text.trim().split(/\r?\n/);
+  const rows: BwtCsvRow[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    // Each cell may be quoted: "1/30/2026 12:00:00 AM","0","0"
+    const cells = lines[i].split(',').map((c) => c.replace(/^"|"$/g, '').trim());
+    if (cells.length < 3) continue;
+    const d = new Date(cells[0]);
+    if (isNaN(d.getTime())) continue;
+    const dateStr = d.toISOString().split('T')[0];
+    const citations = parseInt(cells[1], 10) || 0;
+    const citedPages = parseInt(cells[2], 10) || 0;
+    rows.push({ dateStr, citations, citedPages });
+  }
+  return rows;
+}
+
+function bwtCsvKey(siteUrl: string) {
+  return BWT_CSV_LS_PREFIX + siteUrl;
+}
+
+function loadBwtCsvData(siteUrl: string): BwtCsvRow[] | null {
+  try {
+    const raw = localStorage.getItem(bwtCsvKey(siteUrl));
+    if (!raw) return null;
+    return JSON.parse(raw) as BwtCsvRow[];
+  } catch {
+    return null;
+  }
+}
+
+function saveBwtCsvData(siteUrl: string, rows: BwtCsvRow[]) {
+  try {
+    localStorage.setItem(bwtCsvKey(siteUrl), JSON.stringify(rows));
+  } catch { /* quota exceeded — ignore */ }
+}
+
+function sumCsvCitations(rows: BwtCsvRow[], days: number): number {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  const cutoffStr = cutoff.toISOString().split('T')[0];
+  return rows
+    .filter((r) => r.dateStr >= cutoffStr)
+    .reduce((s, r) => s + r.citations, 0);
+}
+
+function csvRowsForPeriod(rows: BwtCsvRow[], days: number): BwtCsvRow[] {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  const cutoffStr = cutoff.toISOString().split('T')[0];
+  return rows.filter((r) => r.dateStr >= cutoffStr).sort((a, b) => a.dateStr.localeCompare(b.dateStr));
+}
 
 const PERIOD_OPTIONS = [
   { label: "7d", days: 7 },
@@ -121,6 +185,8 @@ function getDemoReport(days: number): AITrafficReport {
   prevStart.setUTCDate(prevStart.getUTCDate() - days + 1);
 
   const pct = (p: number) => Math.round(totalAISessions * p);
+  const totalAIConversions = Math.round(totalAISessions * 0.021);
+  const aiConversionRate: number | null = totalAISessions > 0 ? totalAIConversions / totalAISessions : null;
 
   return {
     propertyId: "demo",
@@ -135,19 +201,21 @@ function getDemoReport(days: number): AITrafficReport {
     prevAISessions,
     totalAIUsers: pct(0.889),
     totalAINewUsers: pct(0.758),
+    totalAIConversions,
+    aiConversionRate,
     changePercent,
     topSource: { label: "ChatGPT", sessions: pct(0.479) },
     topPage: { path: "/blog/what-is-machine-learning", sessions: pct(0.232) },
     pagesWithAITraffic: 14,
     sourceBreakdown: [
-      { source: "chatgpt.com", label: "ChatGPT", category: "known", sessions: pct(0.479), users: pct(0.426) },
-      { source: "perplexity.ai", label: "Perplexity", category: "known", sessions: pct(0.220), users: pct(0.197) },
-      { source: "claude.ai", label: "Claude", category: "known", sessions: pct(0.141), users: pct(0.128) },
-      { source: "gemini.google.com", label: "Gemini", category: "known", sessions: pct(0.081), users: pct(0.073) },
-      { source: "grok.com", label: "Grok", category: "known", sessions: pct(0.037), users: pct(0.034) },
-      { source: "deepseek.com", label: "DeepSeek", category: "known", sessions: pct(0.024), users: pct(0.022) },
-      { source: "copilot.microsoft.com", label: "Microsoft Copilot", category: "known", sessions: pct(0.011), users: pct(0.010) },
-      { source: "edgeservices.bing.com", label: "Bing (AI)", category: "possible", sessions: pct(0.007), users: pct(0.006) },
+      { source: "chatgpt.com", label: "ChatGPT", category: "known", sessions: pct(0.479), users: pct(0.426), conversions: Math.round(pct(0.479) * 0.021) },
+      { source: "perplexity.ai", label: "Perplexity", category: "known", sessions: pct(0.220), users: pct(0.197), conversions: Math.round(pct(0.220) * 0.028) },
+      { source: "claude.ai", label: "Claude", category: "known", sessions: pct(0.141), users: pct(0.128), conversions: Math.round(pct(0.141) * 0.020) },
+      { source: "gemini.google.com", label: "Gemini", category: "known", sessions: pct(0.081), users: pct(0.073), conversions: Math.round(pct(0.081) * 0.015) },
+      { source: "grok.com", label: "Grok", category: "known", sessions: pct(0.037), users: pct(0.034), conversions: Math.round(pct(0.037) * 0.012) },
+      { source: "deepseek.com", label: "DeepSeek", category: "known", sessions: pct(0.024), users: pct(0.022), conversions: Math.round(pct(0.024) * 0.011) },
+      { source: "copilot.microsoft.com", label: "Microsoft Copilot", category: "known", sessions: pct(0.011), users: pct(0.010), conversions: Math.round(pct(0.011) * 0.010) },
+      { source: "edgeservices.bing.com", label: "Bing (AI)", category: "possible", sessions: pct(0.007), users: pct(0.006), conversions: Math.round(pct(0.007) * 0.008) },
     ],
     topPages: [
       { path: "/blog/what-is-machine-learning", sessions: pct(0.232) },
@@ -163,6 +231,13 @@ function getDemoReport(days: number): AITrafficReport {
     ],
     dailyTrend,
     topOrganicPages: [],
+    conversionEvents: [
+      { eventName: "sign_up", conversions: Math.round(totalAIConversions * 0.44) },
+      { eventName: "generate_lead", conversions: Math.round(totalAIConversions * 0.28) },
+      { eventName: "purchase", conversions: Math.round(totalAIConversions * 0.16) },
+      { eventName: "contact", conversions: Math.round(totalAIConversions * 0.08) },
+      { eventName: "schedule_demo", conversions: Math.round(totalAIConversions * 0.04) },
+    ].filter((e) => e.conversions > 0),
     state: "meaningful",
     domain: "techblog-example.com",
   };
@@ -175,11 +250,13 @@ export const Route = createFileRoute("/results")({
     propertyId: (search.propertyId as string) || "",
     propertyName: (search.propertyName as string) || "",
     days: Number(search.days) || 30,
+    bingSiteUrl: (search.bingSiteUrl as string) || "",
   }),
   loaderDeps: ({ search }) => ({
     propertyId: search.propertyId,
     propertyName: search.propertyName,
     days: search.days,
+    bingSiteUrl: search.bingSiteUrl,
   }),
   head: () => ({
     meta: [
@@ -190,10 +267,10 @@ export const Route = createFileRoute("/results")({
   }),
   loader: async ({ deps }) => {
     if (!deps.propertyId) {
-      return { report: null, error: "no_property" };
+      return { report: null, error: "no_property", bingCopilot: null };
     }
     if (deps.propertyId === "demo") {
-      return { report: getDemoReport(deps.days), error: null };
+      return { report: getDemoReport(deps.days), error: null, bingCopilot: null };
     }
     try {
       const result = await fetchAITrafficReport({
@@ -211,10 +288,23 @@ export const Route = createFileRoute("/results")({
       } catch {
         // Never let tracking block the page
       }
-      return { report: result.report, error: null };
+
+      let bingCopilot: BingCopilotData | null = null;
+      if (deps.bingSiteUrl) {
+        try {
+          const result = await fetchBingCopilotData({
+            data: { siteUrl: deps.bingSiteUrl, days: deps.days },
+          });
+          bingCopilot = result.data;
+        } catch {
+          // non-fatal
+        }
+      }
+
+      return { report: result.report, error: null, bingCopilot };
     } catch (e: unknown) {
       console.error("Report fetch failed:", e);
-      return { report: null, error: (e as Error).message || "unknown" };
+      return { report: null, error: (e as Error).message || "unknown", bingCopilot: null };
     }
   },
   component: ResultsPage,
@@ -316,8 +406,8 @@ function LoadingState() {
 }
 
 function ResultsPage() {
-  const { report, error } = Route.useLoaderData();
-  const { propertyId, propertyName, days } = Route.useSearch();
+  const { report, error, bingCopilot } = Route.useLoaderData();
+  const { propertyId, propertyName, days, bingSiteUrl } = Route.useSearch();
   const navigate = useNavigate();
   const [copied, setCopied] = useState<"summary" | "error" | null>(null);
   const [loadingPeriod, setLoadingPeriod] = useState<number | null>(null);
@@ -325,6 +415,12 @@ function ResultsPage() {
   const [showPropDropdown, setShowPropDropdown] = useState(false);
   const propDropdownRef = useRef<HTMLDivElement>(null);
   const loadedKeys = useRef<Set<string>>(new Set());
+  const fileInputRef = useRef<HTMLInputElement>(null); // kept for future BWT re-enable
+
+  const mergedSources = useMemo(() => {
+    if (!report) return [];
+    return report.sourceBreakdown.map((s) => ({ ...s, bwtCitations: undefined as number | undefined }));
+  }, [report]);
 
   // Load the property list written by /connect
   useEffect(() => {
@@ -500,7 +596,7 @@ function ResultsPage() {
                           setShowPropDropdown(false);
                           if (rp.propertyId === propertyId) return;
                           trackEvent("recent_property_switched", { source: "results_dropdown" });
-                          void navigate({ to: "/results", search: { propertyId: rp.propertyId, propertyName: rp.propertyName, days } });
+                          void navigate({ to: "/results", search: { propertyId: rp.propertyId, propertyName: rp.propertyName, days, bingSiteUrl } });
                         }}
                         className={`block w-full text-left px-4 py-2.5 text-xs hover:bg-muted/50 transition-colors ${rp.propertyId === propertyId ? "text-primary font-semibold" : "text-muted-foreground"}`}
                         style={{ fontFamily: bodyFont }}
@@ -570,7 +666,7 @@ function ResultsPage() {
                       setLoadingPeriod(opt.days);
                       setTimeout(() => setLoadingPeriod(null), 5000);
                     }
-                    void navigate({ to: "/results", search: { propertyId, propertyName, days: opt.days } });
+                    void navigate({ to: "/results", search: { propertyId, propertyName, days: opt.days, bingSiteUrl } });
                   }}
                   className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1.5"
                   style={{ fontFamily: bodyFont }}
@@ -600,7 +696,7 @@ function ResultsPage() {
 
             {/* Mobile only: source + pages right after hero */}
             <div className="md:hidden">
-              {report.sourceBreakdown.length > 0 && (
+              {mergedSources.length > 0 && (
                 <section className="mb-6 animate-fade-up animate-delay-150">
                   <h2
                     className="text-[11px] tracking-widest uppercase text-muted-foreground/60 mb-3"
@@ -608,7 +704,7 @@ function ResultsPage() {
                   >
                     By LLM source · Last {periodLabel}
                   </h2>
-                  <SourceList sources={report.sourceBreakdown} />
+                  <SourceList sources={mergedSources} />
                 </section>
               )}
               {report.topPages.length > 0 && (
@@ -638,6 +734,11 @@ function ResultsPage() {
                 </h2>
                 <TrendChart data={report.dailyTrend} />
               </section>
+            )}
+
+            {/* Conversion events table */}
+            {report.conversionEvents.length > 0 && (
+              <ConversionEventsTable events={report.conversionEvents} periodLabel={periodLabel} />
             )}
 
             {/* Zero state */}
@@ -676,7 +777,7 @@ function ResultsPage() {
           <div>
             {/* Source breakdown + pages: desktop only (shown above hero on mobile) */}
             <div className="hidden md:block">
-              {report.sourceBreakdown.length > 0 && (
+              {mergedSources.length > 0 && (
                 <section className="mb-6 animate-fade-up animate-delay-200">
                   <h2
                     className="text-[11px] tracking-widest uppercase text-muted-foreground/60 mb-3"
@@ -684,7 +785,7 @@ function ResultsPage() {
                   >
                     By LLM source · Last {periodLabel}
                   </h2>
-                  <SourceList sources={report.sourceBreakdown} />
+                  <SourceList sources={mergedSources} />
                 </section>
               )}
 
@@ -967,6 +1068,27 @@ function HeroCard({ report, periodLabel }: { report: AITrafficReport; periodLabe
                 </span>
               </div>
             )}
+            {report.totalAIConversions > 0 && (
+              <div className="flex justify-between items-baseline gap-4">
+                <span
+                  className="text-xs text-muted-foreground/60 uppercase tracking-wider"
+                  style={{ fontFamily: bodyFont }}
+                >
+                  Conversions
+                </span>
+                <span
+                  className="text-sm font-semibold text-foreground"
+                  style={{ fontFamily: bodyFont }}
+                >
+                  {report.totalAIConversions.toLocaleString()}
+                  {report.aiConversionRate !== null && (
+                    <span className="text-xs text-muted-foreground/60 ml-1.5 font-normal">
+                      ({(report.aiConversionRate * 100).toFixed(1)}%)
+                    </span>
+                  )}
+                </span>
+              </div>
+            )}
           </div>
         </>
       ) : (
@@ -998,26 +1120,29 @@ function SourceList({
     category: string;
     sessions: number;
     users: number;
+    bwtCitations?: number;
   }>;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(5);
   const INITIAL_COUNT = 5;
+  const PAGE_SIZE = 8;
   const total = sources.reduce((sum, s) => sum + s.sessions, 0);
   const max = Math.max(...sources.map((s) => s.sessions), 1);
-  const visible = expanded ? sources : sources.slice(0, INITIAL_COUNT);
-  const hasMore = sources.length > INITIAL_COUNT;
+  const visible = sources.slice(0, visibleCount);
+  const hasMore = visibleCount < sources.length;
 
   return (
     <div>
       <div className="rounded-xl border border-border bg-card overflow-hidden">
-        {visible.map((s, idx) => (
+        {visible.map((s, idx) => {
+          return (
           <div
             key={s.source}
             className={`relative px-4 py-3.5 ${
               idx < visible.length - 1 ? "border-b border-border/50" : ""
             }`}
           >
-            {/* Proportional fill bar */}
+            {/* Proportional fill bar — sessions only */}
             <div
               className="absolute inset-y-0 left-0 bg-primary/[0.12] pointer-events-none"
               style={{ width: `${(s.sessions / max) * 100}%` }}
@@ -1043,31 +1168,29 @@ function SourceList({
                 </div>
               </div>
               <div className="text-right">
-                <p
-                  className="text-sm font-semibold text-foreground"
-                  style={{ fontFamily: bodyFont }}
-                >
-                  {s.sessions}
+                <p className="text-sm font-semibold text-foreground" style={{ fontFamily: bodyFont }}>
+                  {s.sessions.toLocaleString()}
                 </p>
                 <p
                   className="text-[11px] text-muted-foreground/70"
                   style={{ fontFamily: bodyFont }}
                 >
-                  {total > 0 ? `${Math.round((s.sessions / total) * 100)}%` : ""}
+                  {total > 0 && s.sessions > 0 ? `${Math.round((s.sessions / total) * 100)}%` : ""}
                 </p>
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
       {hasMore && (
         <button
           type="button"
-          onClick={() => setExpanded(!expanded)}
+          onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
           className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           style={{ fontFamily: bodyFont }}
         >
-          {expanded ? "Show less" : `See all ${sources.length} sources`}
+          Show more ({Math.min(PAGE_SIZE, sources.length - visibleCount)} more)
         </button>
       )}
     </div>
@@ -1079,12 +1202,11 @@ function PageList({
 }: {
   pages: Array<{ path: string; sessions: number }>;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(5);
   const INITIAL_COUNT = 5;
-  const MAX_PAGES = 10;
-  const capped = pages.slice(0, MAX_PAGES);
-  const visible = expanded ? capped : capped.slice(0, INITIAL_COUNT);
-  const hasMore = capped.length > INITIAL_COUNT;
+  const PAGE_SIZE = 8;
+  const visible = pages.slice(0, visibleCount);
+  const hasMore = visibleCount < pages.length;
 
   return (
     <div>
@@ -1114,11 +1236,11 @@ function PageList({
       {hasMore && (
         <button
           type="button"
-          onClick={() => setExpanded(!expanded)}
+          onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
           className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           style={{ fontFamily: bodyFont }}
         >
-          {expanded ? "Show less" : `See all ${capped.length} pages`}
+          Show more ({Math.min(PAGE_SIZE, pages.length - visibleCount)} more)
         </button>
       )}
     </div>
@@ -1186,6 +1308,82 @@ function TrendChart({
         ))}
       </div>
     </div>
+  );
+}
+
+function ConversionEventsTable({
+  events,
+  periodLabel,
+}: {
+  events: Array<{ eventName: string; conversions: number }>;
+  periodLabel: string;
+}) {
+  const [visibleCount, setVisibleCount] = useState(5);
+  const INITIAL_COUNT = 5;
+  const PAGE_SIZE = 8;
+  const visible = events.slice(0, visibleCount);
+  const hasMore = visibleCount < events.length;
+  const max = Math.max(...events.map((e) => e.conversions), 1);
+  const total = events.reduce((sum, e) => sum + e.conversions, 0);
+
+  function formatEventName(name: string): string {
+    return name
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  return (
+    <section className="mb-6 animate-fade-up animate-delay-150">
+      <div className="flex items-baseline justify-between mb-3">
+        <h2
+          className="text-[11px] tracking-widest uppercase text-muted-foreground/60"
+          style={{ fontFamily: bodyFont }}
+        >
+          Conversion events from AI · Last {periodLabel}
+        </h2>
+        <span className="text-[11px] text-muted-foreground/40" style={{ fontFamily: bodyFont }}>count</span>
+      </div>
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        {visible.map((e, idx) => (
+          <div
+            key={e.eventName}
+            className={`relative px-4 py-3.5 ${idx < visible.length - 1 ? "border-b border-border/50" : ""}`}
+          >
+            {/* Proportional fill bar */}
+            <div
+              className="absolute inset-y-0 left-0 bg-primary/[0.10] pointer-events-none"
+              style={{ width: `${(e.conversions / max) * 100}%` }}
+            />
+            <div className="relative flex items-center justify-between gap-4">
+              <p
+                className="text-sm font-semibold text-foreground"
+                style={{ fontFamily: bodyFont }}
+              >
+                {formatEventName(e.eventName)}
+              </p>
+              <div className="text-right flex-none">
+                <p className="text-sm font-semibold text-foreground" style={{ fontFamily: bodyFont }}>
+                  {e.conversions.toLocaleString()}
+                </p>
+                <p className="text-[11px] text-muted-foreground/70" style={{ fontFamily: bodyFont }}>
+                  {total > 0 ? `${Math.round((e.conversions / total) * 100)}%` : ""}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {hasMore && (
+        <button
+          type="button"
+          onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+          className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          style={{ fontFamily: bodyFont }}
+        >
+          Show more ({Math.min(PAGE_SIZE, events.length - visibleCount)} more)
+        </button>
+      )}
+    </section>
   );
 }
 
@@ -1312,6 +1510,16 @@ function WhatThisMeans({ report, periodLabel }: { report: AITrafficReport; perio
     ) {
       insights.push(
         `Your AI traffic grew ${report.changePercent}% compared to the previous ${periodLabel}.`
+      );
+    }
+
+    if (report.totalAIConversions > 0 && report.aiConversionRate !== null) {
+      insights.push(
+        `AI visitors completed ${report.totalAIConversions.toLocaleString()} conversions (${(report.aiConversionRate * 100).toFixed(1)}% rate), showing these visits drive real action.`
+      );
+    } else if (report.totalAISessions > 20) {
+      insights.push(
+        "To see whether AI visitors convert, set up key events in Google Analytics 4."
       );
     }
   }

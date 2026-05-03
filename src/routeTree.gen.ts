@@ -16,6 +16,8 @@ import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthGoogleRouteImport } from './routes/auth.google'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthBingRouteImport } from './routes/auth.bing'
+import { Route as AuthBingCallbackRouteImport } from './routes/auth.bing.callback'
 
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
@@ -52,6 +54,16 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthBingRoute = AuthBingRouteImport.update({
+  id: '/auth/bing',
+  path: '/auth/bing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthBingCallbackRoute = AuthBingCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthBingRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -59,8 +71,10 @@ export interface FileRoutesByFullPath {
   '/faq': typeof FaqRoute
   '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
+  '/auth/bing': typeof AuthBingRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/google': typeof AuthGoogleRoute
+  '/auth/bing/callback': typeof AuthBingCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -68,8 +82,10 @@ export interface FileRoutesByTo {
   '/faq': typeof FaqRoute
   '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
+  '/auth/bing': typeof AuthBingRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/google': typeof AuthGoogleRoute
+  '/auth/bing/callback': typeof AuthBingCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -78,8 +94,10 @@ export interface FileRoutesById {
   '/faq': typeof FaqRoute
   '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
+  '/auth/bing': typeof AuthBingRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/google': typeof AuthGoogleRoute
+  '/auth/bing/callback': typeof AuthBingCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -89,8 +107,10 @@ export interface FileRouteTypes {
     | '/faq'
     | '/privacy'
     | '/results'
+    | '/auth/bing'
     | '/auth/callback'
     | '/auth/google'
+    | '/auth/bing/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -98,8 +118,10 @@ export interface FileRouteTypes {
     | '/faq'
     | '/privacy'
     | '/results'
+    | '/auth/bing'
     | '/auth/callback'
     | '/auth/google'
+    | '/auth/bing/callback'
   id:
     | '__root__'
     | '/'
@@ -107,8 +129,10 @@ export interface FileRouteTypes {
     | '/faq'
     | '/privacy'
     | '/results'
+    | '/auth/bing'
     | '/auth/callback'
     | '/auth/google'
+    | '/auth/bing/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -117,6 +141,7 @@ export interface RootRouteChildren {
   FaqRoute: typeof FaqRoute
   PrivacyRoute: typeof PrivacyRoute
   ResultsRoute: typeof ResultsRoute
+  AuthBingRoute: typeof AuthBingRouteWithChildren
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthGoogleRoute: typeof AuthGoogleRoute
 }
@@ -172,8 +197,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/bing': {
+      id: '/auth/bing'
+      path: '/auth/bing'
+      fullPath: '/auth/bing'
+      preLoaderRoute: typeof AuthBingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/bing/callback': {
+      id: '/auth/bing/callback'
+      path: '/callback'
+      fullPath: '/auth/bing/callback'
+      preLoaderRoute: typeof AuthBingCallbackRouteImport
+      parentRoute: typeof AuthBingRoute
+    }
   }
 }
+
+interface AuthBingRouteChildren {
+  AuthBingCallbackRoute: typeof AuthBingCallbackRoute
+}
+
+const AuthBingRouteChildren: AuthBingRouteChildren = {
+  AuthBingCallbackRoute: AuthBingCallbackRoute,
+}
+
+const AuthBingRouteWithChildren = AuthBingRoute._addFileChildren(
+  AuthBingRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -181,6 +232,7 @@ const rootRouteChildren: RootRouteChildren = {
   FaqRoute: FaqRoute,
   PrivacyRoute: PrivacyRoute,
   ResultsRoute: ResultsRoute,
+  AuthBingRoute: AuthBingRouteWithChildren,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthGoogleRoute: AuthGoogleRoute,
 }

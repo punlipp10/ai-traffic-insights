@@ -137,6 +137,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
         { name: "sessions" },
         { name: "totalUsers" },
         { name: "newUsers" },
+        { name: "conversions" },
       ],
       limit: "10000",
     });
@@ -144,7 +145,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
     // Parse multi-date-range data using explicit dateRange dimension
     const currentSources = new Map<
       string,
-      { sessions: number; users: number; newUsers: number; label: string; category: "known" | "possible" }
+      { sessions: number; users: number; newUsers: number; conversions: number; label: string; category: "known" | "possible" }
     >();
     const prevSources = new Map<string, number>();
 
@@ -157,12 +158,14 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
       const sessions = parseInt(row.metricValues?.[0]?.value || "0");
       const users = parseInt(row.metricValues?.[1]?.value || "0");
       const newUsers = parseInt(row.metricValues?.[2]?.value || "0");
+      const conversions = parseInt(row.metricValues?.[3]?.value || "0");
 
       if (dateRangeLabel === "date_range_0") {
         currentSources.set(source, {
           sessions,
           users,
           newUsers,
+          conversions,
           label: match.label,
           category: match.category,
         });
@@ -242,7 +245,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
           },
         },
         orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
-        limit: "10",
+        limit: "25",
       });
 
       topPages = (pagesReport.rows || [])
@@ -253,6 +256,30 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
           })
         )
         .filter((p: { path: string; sessions: number }) => p.path && p.path !== "(not set)");
+    }
+
+    // Report 4: Conversion events breakdown (by event name, filtered to AI sources)
+    let conversionEvents: Array<{ eventName: string; conversions: number }> = [];
+    if (aiSourceValues.length > 0) {
+      const convEventsReport = await runGA4Report(accessToken, propertyId, {
+        dateRanges: [{ startDate: fmt(periodStart), endDate: fmt(today) }],
+        dimensions: [{ name: "eventName" }],
+        metrics: [{ name: "conversions" }],
+        dimensionFilter: {
+          filter: {
+            fieldName: "sessionSource",
+            inListFilter: { values: aiSourceValues },
+          },
+        },
+        orderBys: [{ metric: { metricName: "conversions" }, desc: true }],
+        limit: "50",
+      });
+      conversionEvents = (convEventsReport.rows || [])
+        .map((row: { dimensionValues?: Array<{ value?: string }>; metricValues?: Array<{ value?: string }> }) => ({
+          eventName: row.dimensionValues?.[0]?.value || "",
+          conversions: parseInt(row.metricValues?.[0]?.value || "0"),
+        }))
+        .filter((e: { eventName: string; conversions: number }) => e.eventName && e.conversions > 0);
     }
 
     // Get top organic pages (for zero-data state)
@@ -299,6 +326,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
     let totalAISessions = 0;
     let totalAIUsers = 0;
     let totalAINewUsers = 0;
+    let totalAIConversions = 0;
     let prevAISessions = 0;
 
     const sourceBreakdown: AITrafficReport["sourceBreakdown"] = [];
@@ -307,6 +335,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
       totalAISessions += info.sessions;
       totalAIUsers += info.users;
       totalAINewUsers += info.newUsers;
+      totalAIConversions += info.conversions;
       prevAISessions += prevSources.get(source) || 0;
 
       sourceBreakdown.push({
@@ -315,6 +344,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
         category: info.category,
         sessions: info.sessions,
         users: info.users,
+        conversions: info.conversions,
       });
     }
 
@@ -328,6 +358,8 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
         : totalAISessions > 0
           ? 100
           : null;
+
+    const aiConversionRate = totalAISessions > 0 ? totalAIConversions / totalAISessions : null;
 
     const topSource = sourceBreakdown[0]
       ? { label: sourceBreakdown[0].label, sessions: sourceBreakdown[0].sessions }
@@ -371,6 +403,8 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
       prevAISessions,
       totalAIUsers,
       totalAINewUsers,
+      totalAIConversions,
+      aiConversionRate,
       changePercent,
       topSource,
       topPage,
@@ -379,6 +413,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
       topPages,
       dailyTrend,
       topOrganicPages,
+      conversionEvents,
       state,
       domain,
     };
