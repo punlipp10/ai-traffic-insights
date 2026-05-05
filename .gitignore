@@ -38,3 +38,7 @@ bun.lockb
 .env
 .env.*
 !.env.example
+
+# One-off send scripts with hardcoded secrets
+send-*.mjs
+send-*.ps1

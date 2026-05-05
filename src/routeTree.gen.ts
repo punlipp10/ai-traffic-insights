@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as FaqRouteImport } from './routes/faq'
@@ -19,6 +20,11 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthBingRouteImport } from './routes/auth.bing'
 import { Route as AuthBingCallbackRouteImport } from './routes/auth.bing.callback'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
   path: '/results',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/faq': typeof FaqRoute
   '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/auth/bing': typeof AuthBingRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/google': typeof AuthGoogleRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/faq': typeof FaqRoute
   '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/auth/bing': typeof AuthBingRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/google': typeof AuthGoogleRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/faq': typeof FaqRoute
   '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/auth/bing': typeof AuthBingRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/google': typeof AuthGoogleRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/privacy'
     | '/results'
+    | '/unsubscribe'
     | '/auth/bing'
     | '/auth/callback'
     | '/auth/google'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/privacy'
     | '/results'
+    | '/unsubscribe'
     | '/auth/bing'
     | '/auth/callback'
     | '/auth/google'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/privacy'
     | '/results'
+    | '/unsubscribe'
     | '/auth/bing'
     | '/auth/callback'
     | '/auth/google'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   FaqRoute: typeof FaqRoute
   PrivacyRoute: typeof PrivacyRoute
   ResultsRoute: typeof ResultsRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   AuthBingRoute: typeof AuthBingRouteWithChildren
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthGoogleRoute: typeof AuthGoogleRoute
@@ -148,6 +161,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/results': {
       id: '/results'
       path: '/results'
@@ -232,6 +252,7 @@ const rootRouteChildren: RootRouteChildren = {
   FaqRoute: FaqRoute,
   PrivacyRoute: PrivacyRoute,
   ResultsRoute: ResultsRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   AuthBingRoute: AuthBingRouteWithChildren,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthGoogleRoute: AuthGoogleRoute,

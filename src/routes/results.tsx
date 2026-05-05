@@ -1,11 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { fetchAITrafficReport } from "@/lib/ga4.functions";
 import { fetchBingCopilotData } from "@/lib/bing.functions";
 import type { BingCopilotData } from "@/lib/bing.functions";
 import { saveScan } from "@/lib/tracking.functions";
 import type { AITrafficReport } from "@/lib/ai-sources";
 import { trackEvent } from "@/lib/analytics";
+import {
+  getSessionEmail,
+  getDigestStatus,
+  subscribeToDigest,
+  unsubscribeDigest,
+  updateDigestEmail,
+} from "@/lib/digest.functions";
 
 // ── GA4 property list (localStorage, written by /connect, read here) ────────
 const GA4_PROPS_KEY = "ga4_properties";
@@ -402,6 +410,461 @@ function LoadingState() {
         {LOADING_MESSAGES[msgIdx]}
       </p>
     </div>
+  );
+}
+
+// ── Weekly Digest Card ────────────────────────────────────────────────────────
+
+type DigestStatus =
+  | { state: "idle" }
+  | { state: "loading" }
+  | { state: "not_subscribed"; googleEmail: string | null; hasRefreshToken: boolean }
+  | { state: "subscribed"; digestEmail: string; subscriptionId: string }
+  | { state: "no_auth" };
+
+function DigestCard({
+  propertyId,
+  propertyName,
+  knownProperties,
+  isDemo,
+}: {
+  propertyId: string;
+  propertyName: string;
+  knownProperties: RecentProperty[];
+  isDemo: boolean;
+}) {
+  const [status, setStatus] = useState<DigestStatus>({ state: "idle" });
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editMode, setEditMode] = useState<"subscribe" | "change_email">("subscribe");
+  const [emailInput, setEmailInput] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [unsubConfirm, setUnsubConfirm] = useState(false);
+  const [unsubbing, setUnsubbing] = useState(false);
+  const [selectedPropIds, setSelectedPropIds] = useState<string[]>([propertyId]);
+  const [editPropStatuses, setEditPropStatuses] = useState<Record<string, { subscribed: boolean; subscriptionId?: string }>>({});
+  const [loadingEditProps, setLoadingEditProps] = useState(false);
+
+  const allProps: RecentProperty[] = (() => {
+    const seen = new Set<string>();
+    const list: RecentProperty[] = [];
+    for (const p of knownProperties) {
+      if (!seen.has(p.propertyId)) { seen.add(p.propertyId); list.push(p); }
+    }
+    if (!seen.has(propertyId)) list.unshift({ propertyId, propertyName });
+    return list;
+  })();
+
+  const load = useCallback(async () => {
+    setStatus({ state: "loading" });
+    try {
+      const [sessionRes, statusRes] = await Promise.all([
+        getSessionEmail(),
+        getDigestStatus({ data: { propertyId } }),
+      ]);
+      if (!sessionRes.googleEmail) {
+        setStatus({ state: "no_auth" });
+        return;
+      }
+      if (statusRes.subscribed && statusRes.digestEmail && statusRes.subscriptionId) {
+        setStatus({
+          state: "subscribed",
+          digestEmail: statusRes.digestEmail,
+          subscriptionId: statusRes.subscriptionId,
+        });
+      } else {
+        setStatus({
+          state: "not_subscribed",
+          googleEmail: sessionRes.googleEmail,
+          hasRefreshToken: sessionRes.hasRefreshToken,
+        });
+      }
+    } catch {
+      setStatus({ state: "not_subscribed", googleEmail: null, hasRefreshToken: false });
+    }
+  }, [propertyId]);
+
+  useEffect(() => {
+    if (!isDemo) load();
+  }, [isDemo, load]);
+
+  function openSubscribeModal() {
+    setEditMode("subscribe");
+    setSaveError(null);
+    setSaveSuccess(false);
+    setSelectedPropIds([propertyId]);
+    setEmailInput(
+      status.state === "not_subscribed" ? (status.googleEmail ?? "") : ""
+    );
+    setModalOpen(true);
+  }
+
+  async function openEditModal() {
+    setEditMode("change_email");
+    setSaveError(null);
+    setSaveSuccess(false);
+    setEmailInput(status.state === "subscribed" ? status.digestEmail : "");
+    setLoadingEditProps(true);
+    setModalOpen(true);
+    try {
+      const results = await Promise.all(
+        allProps.map((p) => getDigestStatus({ data: { propertyId: p.propertyId } }).then((r) => ({ ...r, propertyId: p.propertyId })))
+      );
+      const statuses: Record<string, { subscribed: boolean; subscriptionId?: string }> = {};
+      const preSelected: string[] = [];
+      for (const r of results) {
+        statuses[r.propertyId] = { subscribed: !!r.subscribed, subscriptionId: r.subscriptionId ?? undefined };
+        if (r.subscribed) preSelected.push(r.propertyId);
+      }
+      setEditPropStatuses(statuses);
+      setSelectedPropIds(preSelected);
+    } catch {
+      // fallback: just current property
+      setEditPropStatuses({ [propertyId]: { subscribed: true, subscriptionId: status.state === "subscribed" ? status.subscriptionId : undefined } });
+      setSelectedPropIds([propertyId]);
+    } finally {
+      setLoadingEditProps(false);
+    }
+  }
+
+  async function handleSave() {
+    setSaveError(null);
+    setSaving(true);
+    try {
+      if (editMode === "subscribe") {
+        const propsToSub = allProps.filter((p) => selectedPropIds.includes(p.propertyId));
+        await Promise.all(
+          propsToSub.map((p) =>
+            subscribeToDigest({ data: { digestEmail: emailInput, propertyId: p.propertyId, propertyName: p.propertyName } })
+          )
+        );
+        trackEvent("digest_subscribed", { property_id: propertyId, count: propsToSub.length });
+      } else {
+        // Edit mode: handle subscribe/unsubscribe for each property + update email
+        const ops: Promise<unknown>[] = [];
+        for (const p of allProps) {
+          const prev = editPropStatuses[p.propertyId];
+          const nowSelected = selectedPropIds.includes(p.propertyId);
+          if (prev?.subscribed && nowSelected && prev.subscriptionId) {
+            // was subscribed and still is — update email
+            ops.push(updateDigestEmail({ data: { subscriptionId: prev.subscriptionId, newEmail: emailInput } }));
+          } else if (prev?.subscribed && !nowSelected && prev.subscriptionId) {
+            // was subscribed and removed — unsubscribe
+            ops.push(unsubscribeDigest({ data: { subscriptionId: prev.subscriptionId } }));
+          } else if (!prev?.subscribed && nowSelected) {
+            // newly added — subscribe
+            ops.push(subscribeToDigest({ data: { digestEmail: emailInput, propertyId: p.propertyId, propertyName: p.propertyName } }));
+          }
+        }
+        await Promise.all(ops);
+        trackEvent("digest_edited", { property_id: propertyId });
+      }
+      setSaveSuccess(true);
+      setTimeout(() => {
+        setModalOpen(false);
+        setSaveSuccess(false);
+        load();
+      }, 1200);
+    } catch (e: unknown) {
+      const msg = (e as Error).message ?? "Something went wrong";
+      setSaveError(
+        msg === "not_authenticated"
+          ? "Please reconnect Google Analytics first."
+          : msg === "Invalid email address"
+            ? "Please enter a valid email."
+            : "Something went wrong. Try again."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleUnsubscribe() {
+    if (status.state !== "subscribed") return;
+    setUnsubbing(true);
+    try {
+      await unsubscribeDigest({ data: { subscriptionId: status.subscriptionId } });
+      trackEvent("digest_unsubscribed", { property_id: propertyId });
+      setUnsubConfirm(false);
+      load();
+    } catch {
+      // non-fatal, just close
+      setUnsubConfirm(false);
+    } finally {
+      setUnsubbing(false);
+    }
+  }
+
+  if (isDemo) {
+    return (
+      <div className="rounded-xl border border-border/60 bg-card px-4 py-3 flex items-start gap-3 opacity-60">
+        <span className="text-base leading-none mt-0.5">📬</span>
+        <div>
+          <p className="font-medium text-sm" style={{ fontFamily: bodyFont }}>Get weekly AI traffic emails</p>
+          <p className="text-[11px] text-muted-foreground/60 mt-0.5" style={{ fontFamily: bodyFont }}>
+            Connect your GA4 to subscribe
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status.state === "idle" || status.state === "loading") {
+    return (
+      <div className="rounded-xl border border-border/60 bg-card px-4 py-3 flex items-center gap-3 animate-pulse">
+        <span className="text-base leading-none opacity-40">📬</span>
+        <div className="space-y-1.5 flex-1">
+          <div className="h-3 rounded bg-muted w-1/2" />
+          <div className="h-2.5 rounded bg-muted w-3/4" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Card */}
+      {status.state === "subscribed" ? (
+        <div className="rounded-xl border border-primary/25 bg-primary/[0.04] px-4 py-3">
+          <div className="flex items-start gap-3">
+            <span className="text-base leading-none mt-0.5">📬</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <p className="font-medium text-sm text-foreground" style={{ fontFamily: bodyFont }}>
+                  Email report active
+                </p>
+                <span className="text-[10px] font-semibold tracking-wider uppercase text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-full">
+                  Monday 9am
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground/70 truncate" style={{ fontFamily: bodyFont }}>
+                Sending to {status.digestEmail}
+              </p>
+              <div className="flex gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={openEditModal}
+                  className="text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors underline underline-offset-2 cursor-pointer"
+                  style={{ fontFamily: bodyFont }}
+                >
+                  Edit
+                </button>
+                <span className="text-muted-foreground/30 text-[11px]">·</span>
+                <button
+                  type="button"
+                  onClick={() => setUnsubConfirm(true)}
+                  className="text-[11px] text-muted-foreground/60 hover:text-destructive transition-colors underline underline-offset-2 cursor-pointer"
+                  style={{ fontFamily: bodyFont }}
+                >
+                  Unsubscribe
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={openSubscribeModal}
+          disabled={status.state === "not_subscribed" && !status.hasRefreshToken}
+          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors text-left flex items-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ fontFamily: bodyFont }}
+        >
+          <span className="text-base leading-none">📬</span>
+          <div>
+            <p className="font-medium text-sm">Get weekly AI traffic emails</p>
+            <p className="text-[11px] text-muted-foreground/60 mt-0.5">
+              {status.state === "not_subscribed" && !status.hasRefreshToken
+                ? "Reconnect Google Analytics to subscribe"
+                : "AI highlights every Monday — straight to your inbox"}
+            </p>
+          </div>
+        </button>
+      )}
+
+      {/* Subscribe / change-email modal */}
+      {modalOpen && typeof document !== "undefined" && createPortal(
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setModalOpen(false); setSaveError(null); } }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-border shadow-2xl p-6"
+            style={{ backgroundColor: "#ffffff", isolation: "isolate" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3
+              className="text-lg font-semibold text-foreground mb-1"
+              style={{ fontFamily: bodyFont }}
+            >
+              {editMode === "subscribe" ? "Get weekly email report" : "Edit digest"}
+            </h3>
+            <p className="text-xs text-muted-foreground mb-5" style={{ fontFamily: bodyFont }}>
+              {editMode === "subscribe"
+                ? "Pick properties to include. Sent every Monday at 9am UTC."
+                : "Change your email or update which properties are included."}
+            </p>
+
+            {/* Property selection */}
+            {editMode === "subscribe" ? (
+              <div className="mb-4">
+                <span className="text-xs font-medium text-muted-foreground block mb-2" style={{ fontFamily: bodyFont }}>
+                  Properties
+                </span>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                  {allProps.map((p) => (
+                    <label
+                      key={p.propertyId}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-muted/50 border border-border/60 cursor-pointer hover:bg-muted/70 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedPropIds.includes(p.propertyId)}
+                        onChange={(e) => {
+                          if (p.propertyId === propertyId) return;
+                          setSelectedPropIds((prev) =>
+                            e.target.checked ? [...prev, p.propertyId] : prev.filter((id) => id !== p.propertyId)
+                          );
+                        }}
+                        disabled={p.propertyId === propertyId}
+                        className="accent-primary"
+                      />
+                      <span className="text-xs font-medium text-foreground truncate" style={{ fontFamily: bodyFont }}>
+                        {p.propertyName}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="mb-4">
+                <span className="text-xs font-medium text-muted-foreground block mb-2" style={{ fontFamily: bodyFont }}>
+                  Properties
+                </span>
+                {loadingEditProps ? (
+                  <div className="px-3 py-3 rounded-lg bg-muted/50 border border-border/60">
+                    <span className="text-xs text-muted-foreground/60" style={{ fontFamily: bodyFont }}>Loading…</span>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                    {allProps.map((p) => (
+                      <label
+                        key={p.propertyId}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-muted/50 border border-border/60 cursor-pointer hover:bg-muted/70 transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedPropIds.includes(p.propertyId)}
+                          onChange={(e) => {
+                            setSelectedPropIds((prev) =>
+                              e.target.checked ? [...prev, p.propertyId] : prev.filter((id) => id !== p.propertyId)
+                            );
+                          }}
+                          className="accent-primary"
+                        />
+                        <span className="text-xs font-medium text-foreground truncate" style={{ fontFamily: bodyFont }}>
+                          {p.propertyName}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <label className="block mb-1.5">
+              <span className="text-xs font-medium text-muted-foreground" style={{ fontFamily: bodyFont }}>
+                Email address
+              </span>
+            </label>
+            <input
+              type="email"
+              value={emailInput}
+              onChange={(e) => { setEmailInput(e.target.value); setSaveError(null); }}
+              placeholder="you@example.com"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/40 mb-4"
+              style={{ fontFamily: bodyFont }}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSave(); }}
+              autoFocus
+            />
+
+            {saveError && (
+              <p className="text-xs text-red-500 mb-3 -mt-2" style={{ fontFamily: bodyFont }}>{saveError}</p>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setModalOpen(false); setSaveError(null); }}
+                className="flex-1 rounded-full border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                style={{ fontFamily: bodyFont }}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving || !emailInput.trim() || saveSuccess}
+                className="flex-1 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
+                style={{ fontFamily: bodyFont }}
+              >
+                {saveSuccess ? "✓ Saved!" : saving ? "Saving…" : editMode === "subscribe" ? "Subscribe" : "Save"}
+              </button>
+            </div>
+
+            {editMode === "subscribe" && (
+              <p className="text-[10px] text-muted-foreground/40 text-center mt-4" style={{ fontFamily: bodyFont }}>
+                Sent every Monday · Unsubscribe any time
+              </p>
+            )}
+
+          </div>
+        </div>
+      , document.body)}
+
+      {/* Unsubscribe confirm modal */}
+      {unsubConfirm && typeof document !== "undefined" && createPortal(
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setUnsubConfirm(false); }}
+        >
+          <div
+            className="w-full max-w-xs rounded-2xl border border-border bg-card shadow-2xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="font-semibold text-sm text-foreground mb-1" style={{ fontFamily: bodyFont }}>
+              Stop email reports?
+            </p>
+            <p className="text-xs text-muted-foreground mb-5" style={{ fontFamily: bodyFont }}>
+              You won't receive the Monday AI traffic report for {propertyName} anymore.
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setUnsubConfirm(false)}
+                className="flex-1 rounded-full border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                style={{ fontFamily: bodyFont }}
+              >
+                Keep it
+              </button>
+              <button
+                type="button"
+                onClick={handleUnsubscribe}
+                disabled={unsubbing}
+                className="flex-1 rounded-full bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-60 cursor-pointer"
+                style={{ fontFamily: bodyFont }}
+              >
+                {unsubbing ? "Stopping…" : "Unsubscribe"}
+              </button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
+    </>
   );
 }
 
@@ -814,6 +1277,14 @@ function ResultsPage() {
                 Actions
               </h2>
 
+              {/* Weekly digest */}
+              <DigestCard
+                propertyId={propertyId}
+                propertyName={report.propertyName ?? propertyName}
+                knownProperties={recentProps}
+                isDemo={propertyId === "demo"}
+              />
+
               {/* Copy summary */}
               <button
                 type="button"
@@ -900,7 +1371,6 @@ function ResultsPage() {
                   </div>
                 </div>
               </Link>
-
 
             </section>
 
