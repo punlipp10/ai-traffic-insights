@@ -11,6 +11,7 @@ export const Route = createFileRoute("/auth/google")({
 
         const url = new URL(request.url);
         const origin = url.origin;
+        const redirectAfter = url.searchParams.get("redirect") ?? "/connect";
 
         const authUrl = new URL(
           "https://accounts.google.com/o/oauth2/v2/auth"
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/auth/google")({
         );
         authUrl.searchParams.set("access_type", "offline");
         authUrl.searchParams.set("prompt", "consent");
+        authUrl.searchParams.set("state", redirectAfter);
 
         return new Response(null, {
           status: 302,

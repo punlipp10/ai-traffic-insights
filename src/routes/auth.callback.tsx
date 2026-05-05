@@ -39,6 +39,9 @@ export const Route = createFileRoute("/auth/callback")({
         const url = new URL(request.url);
         const code = url.searchParams.get("code");
         const error = url.searchParams.get("error");
+        const state = url.searchParams.get("state");
+        // Only allow relative paths to prevent open-redirect attacks
+        const redirectTo = state && state.startsWith("/") ? state : "/connect";
 
         if (!code || error) {
           console.error("OAuth callback error:", error || "missing code");
@@ -99,7 +102,7 @@ export const Route = createFileRoute("/auth/callback")({
 
           return new Response(null, {
             status: 302,
-            headers: { Location: "/connect" },
+            headers: { Location: redirectTo },
           });
         } catch (err) {
           console.error("Auth callback unexpected error:", err);

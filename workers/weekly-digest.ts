@@ -240,7 +240,7 @@ function buildEmailHtml(
         p.changePercent === null ? MUTED : p.changePercent >= 0 ? GREEN : MUTED;
       const changeArrow =
         p.changePercent === null ? "" : p.changePercent >= 0 ? "↑" : "↓";
-      const reportUrl = `${baseUrl}/results?propertyId=${encodeURIComponent(p.propertyId)}&days=7`;
+      const reportUrl = `${baseUrl}/auth/google?redirect=${encodeURIComponent(`/results?propertyId=${encodeURIComponent(p.propertyId)}&days=7`)}`;
 
       return `
       <tr><td style="padding-bottom:20px;">
