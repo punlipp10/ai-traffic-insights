@@ -31,7 +31,7 @@ function PrivacyPage() {
           Privacy
         </h1>
         <p className="text-xs text-muted-foreground/50 mb-8">
-          Last updated: April 18, 2026
+          Last updated: May 5, 2026
         </p>
 
         <div className="space-y-6 text-sm text-muted-foreground leading-relaxed">
@@ -78,13 +78,46 @@ function PrivacyPage() {
               cookie on your device. You can clear it at any time by clearing
               your browser cookies.
             </p>
-            <p>
+            <p className="mb-3">
               We also save a summary of each scan to our database. This includes
               your Google account email, the Google Analytics property ID and
               name, and aggregate numbers from your report, for example total
               AI sessions, top source, and top page. We do{" "}
               <strong>not</strong> store your raw analytics data or individual
               visitor records.
+            </p>
+            <p>
+              If you subscribe to the weekly digest, we additionally store your
+              digest email address and an AES-256 encrypted copy of your Google
+              refresh token in our database. The refresh token is used solely to
+              fetch your GA4 data each week to generate your digest. It is never
+              logged or shared.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-semibold text-foreground mb-2">
+              Weekly digest emails
+            </h2>
+            <p className="mb-3">
+              If you opt in to the weekly digest, we will send you a weekly
+              email summarising your AI traffic. You can unsubscribe at any
+              time using the unsubscribe link in every digest email, or by
+              clicking "Edit" in the digest card on your results page.
+            </p>
+            <p>
+              Digest emails are sent via{" "}
+              <a
+                href="https://resend.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-foreground"
+              >
+                Resend
+              </a>
+              . Your email address is shared with Resend solely for the purpose
+              of delivering your digest. Resend acts as a data processor and
+              does not use your address for any other purpose.
             </p>
           </section>
 
@@ -107,6 +140,7 @@ function PrivacyPage() {
             <ul className="list-disc pl-4 space-y-1">
               <li>All traffic between your browser and our servers is encrypted over HTTPS</li>
               <li>Access tokens are stored in encrypted, HTTP-only session cookies</li>
+              <li>Google refresh tokens (for digest subscribers) are encrypted with AES-256 before storage</li>
               <li>We use Supabase (with row-level security) for database storage</li>
               <li>Our servers run on Cloudflare Workers with no persistent disk access</li>
             </ul>
@@ -127,6 +161,8 @@ function PrivacyPage() {
             <ul className="list-disc pl-4 space-y-1 mt-1">
               <li>Clear your browser cookies to remove your session</li>
               <li>Click "Disconnect" in the app to end your session</li>
+              <li>Use the unsubscribe link in any digest email to cancel your digest subscription</li>
+              <li>Click "Edit" in the digest card on your results page to remove properties or cancel</li>
               <li>
                 Revoke access in your{" "}
                 <a
@@ -146,7 +182,7 @@ function PrivacyPage() {
                 >
                   info@lovedby.ai
                 </a>{" "}
-                to request deletion of your stored scan summaries
+                to request deletion of your stored scan summaries or digest subscription data
               </li>
             </ul>
           </section>
