@@ -1905,7 +1905,10 @@ function ConversionEventsTable({
         >
           Conversion events from AI · Last {periodLabel}
         </h2>
-        <span className="text-[11px] text-muted-foreground/40" style={{ fontFamily: bodyFont }}>count</span>
+        <span className="inline-flex items-center gap-2">
+          <span className="inline-block bg-primary/10 text-primary text-[9px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded-full">New</span>
+          <span className="text-[11px] text-muted-foreground/40" style={{ fontFamily: bodyFont }}>count</span>
+        </span>
       </div>
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         {visible.map((e, idx) => (
