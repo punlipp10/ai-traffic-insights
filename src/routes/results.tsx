@@ -446,7 +446,13 @@ function DigestCard({
   const [editPropStatuses, setEditPropStatuses] = useState<Record<string, { subscribed: boolean; subscriptionId?: string }>>({});
   const [loadingEditProps, setLoadingEditProps] = useState(false);
 
-  const allProps: RecentProperty[] = (() => {
+  const demoProps: RecentProperty[] = [
+    { propertyId: "demo", propertyName: "TechBlog Example" },
+    { propertyId: "demo-2", propertyName: "My SaaS Blog" },
+    { propertyId: "demo-3", propertyName: "Portfolio Site" },
+  ];
+
+  const allProps: RecentProperty[] = isDemo ? demoProps : (() => {
     const seen = new Set<string>();
     const list: RecentProperty[] = [];
     for (const p of knownProperties) {
