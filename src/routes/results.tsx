@@ -436,7 +436,7 @@ function DigestCard({
   const [status, setStatus] = useState<DigestStatus>({ state: "idle" });
   const [modalOpen, setModalOpen] = useState(false);
   const [editMode, setEditMode] = useState<"subscribe" | "change_email">("subscribe");
-  const [emailInput, setEmailInput] = useState("");
+  const [emailInput, setEmailInput] = useState(isDemo ? "webmaster@techblog.com" : "");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -691,13 +691,14 @@ function DigestCard({
                 >
                   Cancel
                 </button>
-                <a
-                  href="/auth/google"
-                  className="flex-1 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors text-center"
+                <button
+                  type="button"
+                  onClick={() => { setModalOpen(false); setSaveError(null); }}
+                  className="flex-1 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors text-center cursor-pointer"
                   style={{ fontFamily: bodyFont }}
                 >
-                  Sign in to subscribe
-                </a>
+                  Subscribe
+                </button>
               </div>
 
               <p className="text-[10px] text-muted-foreground/40 text-center mt-4" style={{ fontFamily: bodyFont }}>
