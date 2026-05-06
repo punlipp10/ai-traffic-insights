@@ -598,15 +598,109 @@ function DigestCard({
 
   if (isDemo) {
     return (
-      <div className="rounded-xl border border-border/60 bg-card px-4 py-3 flex items-start gap-3 opacity-60">
-        <span className="text-base leading-none mt-0.5">📬</span>
-        <div>
-          <p className="font-medium text-sm" style={{ fontFamily: bodyFont }}>Get weekly AI traffic emails</p>
-          <p className="text-[11px] text-muted-foreground/60 mt-0.5" style={{ fontFamily: bodyFont }}>
-            Connect your GA4 to subscribe
-          </p>
-        </div>
-      </div>
+      <>
+        <button
+          type="button"
+          onClick={() => { setEditMode("subscribe"); setModalOpen(true); }}
+          className="w-full rounded-xl border border-border/60 bg-card px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors text-left flex items-start gap-3 cursor-pointer"
+          style={{ fontFamily: bodyFont }}
+        >
+          <span className="text-base leading-none mt-0.5">📬</span>
+          <div>
+            <p className="font-medium text-sm" style={{ fontFamily: bodyFont }}>Get weekly AI traffic emails <span className="inline-block align-middle bg-primary/10 text-primary text-[9px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded-full ml-1">New</span></p>
+            <p className="text-[11px] text-muted-foreground/60 mt-0.5" style={{ fontFamily: bodyFont }}>
+              AI highlights every Monday — straight to your inbox
+            </p>
+          </div>
+        </button>
+
+        {/* Demo subscribe modal */}
+        {modalOpen && typeof document !== "undefined" && createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+            onClick={(e) => { if (e.target === e.currentTarget) { setModalOpen(false); setSaveError(null); } }}
+          >
+            <div
+              className="w-full max-w-sm rounded-2xl border border-border shadow-2xl p-6"
+              style={{ backgroundColor: "#ffffff", isolation: "isolate" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold text-foreground mb-1" style={{ fontFamily: bodyFont }}>
+                Get weekly email report
+              </h3>
+              <p className="text-xs text-muted-foreground mb-5" style={{ fontFamily: bodyFont }}>
+                Pick properties to include. Sent every Monday at 9am UTC.
+              </p>
+
+              <div className="mb-4">
+                <span className="text-xs font-medium text-muted-foreground block mb-2" style={{ fontFamily: bodyFont }}>Properties</span>
+                <div className="space-y-1.5">
+                  {allProps.map((p) => (
+                    <label
+                      key={p.propertyId}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-muted/50 border border-border/60 cursor-pointer hover:bg-muted/70 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedPropIds.includes(p.propertyId)}
+                        onChange={(e) => {
+                          setSelectedPropIds((prev) =>
+                            e.target.checked ? [...prev, p.propertyId] : prev.filter((id) => id !== p.propertyId)
+                          );
+                        }}
+                        className="accent-primary"
+                      />
+                      <span className="text-xs font-medium text-foreground truncate" style={{ fontFamily: bodyFont }}>
+                        {p.propertyName}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <label className="block mb-1.5">
+                <span className="text-xs font-medium text-muted-foreground" style={{ fontFamily: bodyFont }}>Email address</span>
+              </label>
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => { setEmailInput(e.target.value); setSaveError(null); }}
+                placeholder="you@example.com"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/40 mb-4"
+                style={{ fontFamily: bodyFont }}
+                autoFocus
+              />
+
+              {saveError && (
+                <p className="text-xs text-red-500 mb-3 -mt-2" style={{ fontFamily: bodyFont }}>{saveError}</p>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setModalOpen(false); setSaveError(null); }}
+                  className="flex-1 rounded-full border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  style={{ fontFamily: bodyFont }}
+                >
+                  Cancel
+                </button>
+                <a
+                  href="/auth/google"
+                  className="flex-1 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors text-center"
+                  style={{ fontFamily: bodyFont }}
+                >
+                  Sign in to subscribe
+                </a>
+              </div>
+
+              <p className="text-[10px] text-muted-foreground/40 text-center mt-4" style={{ fontFamily: bodyFont }}>
+                Sent every Monday · Unsubscribe any time
+              </p>
+            </div>
+          </div>
+        , document.body)}
+      </>
     );
   }
 
@@ -673,7 +767,7 @@ function DigestCard({
         >
           <span className="text-base leading-none">📬</span>
           <div>
-            <p className="font-medium text-sm">Get weekly AI traffic emails</p>
+            <p className="font-medium text-sm">Get weekly AI traffic emails <span className="inline-block align-middle bg-primary/10 text-primary text-[9px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded-full ml-1">New</span></p>
             <p className="text-[11px] text-muted-foreground/60 mt-0.5">
               {status.state === "not_subscribed" && !status.hasRefreshToken
                 ? "Reconnect Google Analytics to subscribe"
