@@ -145,6 +145,16 @@ function LandingPage() {
               LovedByAI
             </a>
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+            <a href="https://toolfame.com/item/is-ai-sending-me-traffic" target="_blank" rel="noopener noreferrer"><img src="https://toolfame.com/badge-light.svg" alt="Featured on toolfame.com" className="h-7 w-auto" /></a>
+            <a href="https://aitoolfame.com/item/is-ai-sending-me-traffic" target="_blank" rel="noopener noreferrer"><img src="https://aitoolfame.com/badge-light.svg" alt="Featured on aitoolfame.com" className="h-7 w-auto" /></a>
+            <a href="https://saasfame.com/item/is-ai-sending-me-traffic" target="_blank" rel="noopener noreferrer"><img src="https://saasfame.com/badge-light.svg" alt="Featured on saasfame.com" className="h-7 w-auto" /></a>
+            <a href="https://findly.tools/is-ai-sending-me-traffic-free-ai-traffic-checker?utm_source=is-ai-sending-me-traffic-free-ai-traffic-checker" target="_blank" rel="noopener noreferrer"><img src="https://findly.tools/badges/findly-tools-badge-light.svg" alt="Featured on Findly.tools" className="h-7 w-auto" /></a>
+            <a href="https://startupfa.me/s/is-ai-sending?utm_source=isaisendingmetraffic.com" target="_blank" rel="noopener noreferrer"><img src="https://startupfa.me/badges/featured-badge.webp" alt="Featured on Startup Fame" className="h-7 w-auto" /></a>
+            <a href="https://dofollow.tools" target="_blank" rel="noopener noreferrer"><img src="https://dofollow.tools/badge/badge_light.svg" alt="Featured on Dofollow.Tools" className="h-7 w-auto" /></a>
+            <a href="https://fazier.com/launches/isaisendingmetraffic.com" target="_blank" rel="noopener noreferrer"><img src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=light" alt="Fazier badge" className="h-7 w-auto" /></a>
+            <a href="https://twelve.tools" target="_blank" rel="noopener noreferrer"><img src="https://twelve.tools/badge0-white.svg" alt="Featured on Twelve Tools" className="h-7 w-auto" /></a>
+          </div>
       </footer>
     </div>
   );
