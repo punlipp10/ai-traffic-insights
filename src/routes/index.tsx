@@ -154,6 +154,7 @@ function LandingPage() {
             <a href="https://dofollow.tools" target="_blank" rel="noopener noreferrer"><img src="https://dofollow.tools/badge/badge_light.svg" alt="Featured on Dofollow.Tools" className="h-7 w-auto" /></a>
             <a href="https://fazier.com/launches/isaisendingmetraffic.com" target="_blank" rel="noopener noreferrer"><img src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=light" alt="Fazier badge" className="h-7 w-auto" /></a>
             <a href="https://twelve.tools" target="_blank" rel="noopener noreferrer"><img src="https://twelve.tools/badge0-white.svg" alt="Featured on Twelve Tools" className="h-7 w-auto" /></a>
+            <a href="https://turbo0.com/item/is-ai-sending-me-traffic" target="_blank" rel="noopener noreferrer"><img src="https://img.turbo0.com/badge-listed-light.svg" alt="Listed on Turbo0" className="h-7 w-auto" /></a>
           </div>
       </footer>
     </div>
