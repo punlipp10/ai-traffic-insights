@@ -57,7 +57,6 @@ const KNOWN_AI_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
 const POSSIBLE_AI_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
   { pattern: /edgeservices\.bing\.com/i, label: "Bing (AI)" },
   { pattern: /copilot\.bing\.com/i, label: "Bing Copilot" },
-  { pattern: /search\.brave\.com/i, label: "Brave (AI)" },
   { pattern: /arc\.net/i, label: "Arc Search" },
 ];
 
