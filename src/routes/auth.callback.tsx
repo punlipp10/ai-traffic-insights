@@ -8,14 +8,16 @@ interface SessionData {
   googleEmail?: string;
 }
 
-function decodeJwtEmail(idToken: string): string | null {
+async function fetchGoogleEmail(accessToken: string): Promise<string | undefined> {
   try {
-    const payload = idToken.split(".")[1];
-    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const decoded = JSON.parse(atob(base64)) as { email?: string };
-    return decoded.email ?? null;
+    const res = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) return undefined;
+    const info = await res.json() as { email?: string };
+    return info.email;
   } catch {
-    return null;
+    return undefined;
   }
 }
 
@@ -97,7 +99,7 @@ export const Route = createFileRoute("/auth/callback")({
             googleAccessToken: tokens.access_token,
             googleRefreshToken: tokens.refresh_token,
             googleTokenExpiry: Date.now() + tokens.expires_in * 1000,
-            googleEmail: tokens.id_token ? decodeJwtEmail(tokens.id_token) ?? undefined : undefined,
+            googleEmail: tokens.access_token ? await fetchGoogleEmail(tokens.access_token) : undefined,
           });
 
           return new Response(null, {

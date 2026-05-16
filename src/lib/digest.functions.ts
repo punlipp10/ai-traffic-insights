@@ -11,10 +11,10 @@ interface SessionData {
 }
 
 function getSessionConfig() {
+  const password = process.env.SESSION_SECRET;
+  if (!password) throw new Error("SESSION_SECRET environment variable is required");
   return {
-    password:
-      process.env.SESSION_SECRET ||
-      "dev-fallback-secret-must-be-32-characters-long!!",
+    password,
     name: "ai-traffic",
     maxAge: 60 * 60 * 24,
   };
