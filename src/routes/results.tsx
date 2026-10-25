@@ -983,10 +983,12 @@ function DigestCard({
 function HostFilter({
   hosts,
   selected,
+  pending,
   onApply,
 }: {
   hosts: AITrafficReport["hosts"];
   selected: string[];
+  pending: boolean;
   onApply: (hosts: string[]) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -1032,6 +1034,9 @@ function HostFilter({
         className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer max-w-[180px] ${selected.length > 0 ? "bg-primary/10 text-primary" : "bg-muted/60 text-muted-foreground hover:text-foreground"}`}
         style={{ fontFamily: bodyFont }}
       >
+        {pending && (
+          <span className="w-2.5 h-2.5 rounded-full border border-primary border-t-transparent animate-spin inline-block flex-none" />
+        )}
         <span className="truncate">{label}</span>
         <svg
           className={`w-3 h-3 flex-none transition-transform ${open ? "rotate-180" : ""}`}
@@ -1102,6 +1107,12 @@ function ResultsPage() {
   const navigate = useNavigate();
   const [copied, setCopied] = useState<"summary" | "error" | null>(null);
   const [loadingPeriod, setLoadingPeriod] = useState<number | null>(null);
+  const [loadingHosts, setLoadingHosts] = useState(false);
+
+  // Host filter reload finished (or failed) once new loader data arrives
+  useEffect(() => {
+    setLoadingHosts(false);
+  }, [report, error]);
   const [recentProps, setRecentProps] = useState<RecentProperty[]>([]);
   const [showPropDropdown, setShowPropDropdown] = useState(false);
   const propDropdownRef = useRef<HTMLDivElement>(null);
@@ -1336,7 +1347,9 @@ function ResultsPage() {
           <HostFilter
             hosts={report.hosts}
             selected={report.hostFilter}
+            pending={loadingHosts}
             onApply={(next) => {
+              setLoadingHosts(true);
               trackEvent("results_host_filter_changed", { hosts_count: next.length });
               void navigate({ to: "/results", search: { propertyId, propertyName, days, bingSiteUrl, hosts: next.join(",") } });
             }}
@@ -1387,7 +1400,7 @@ function ResultsPage() {
         </div>
 
         {/* Desktop two-column grid */}
-        <div className={`md:grid md:grid-cols-[1fr_340px] md:gap-8 md:items-start lg:grid-cols-[1fr_380px] transition-opacity duration-200${loadingPeriod !== null ? ' opacity-50 pointer-events-none select-none' : ''}`}>
+        <div className={`md:grid md:grid-cols-[1fr_340px] md:gap-8 md:items-start lg:grid-cols-[1fr_380px] transition-opacity duration-200${loadingPeriod !== null || loadingHosts ? ' opacity-50 pointer-events-none select-none' : ''}`}>
 
           {/* LEFT COLUMN */}
           <div>
