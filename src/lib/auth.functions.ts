@@ -13,7 +13,7 @@ interface SessionData {
   googleEmail?: string;
 }
 
-function getSessionConfig() {
+export function getSessionConfig() {
   const password = process.env.SESSION_SECRET;
   if (!password) throw new Error("SESSION_SECRET environment variable is required");
   return {

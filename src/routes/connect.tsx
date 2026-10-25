@@ -245,7 +245,7 @@ function ConnectPage() {
             You need to connect your Google account first.
           </p>
           <a
-            href="/auth/google"
+            href="/auth/google?force=1"
             onClick={() => {
               trackEvent("connect_google_click", { source: "connect_gate" });
             }}
@@ -276,7 +276,7 @@ function ConnectPage() {
             {error}
           </p>
           <a
-            href="/auth/google"
+            href="/auth/google?force=1"
             onClick={() => {
               trackEvent("connect_google_click", { source: "connect_error" });
             }}
@@ -309,7 +309,7 @@ function ConnectPage() {
           </p>
           <div className="flex gap-3 justify-center pt-2">
             <a
-              href="/auth/google"
+              href="/auth/google?force=1"
               onClick={() => {
                 trackEvent("connect_google_click", { source: "connect_no_properties" });
               }}
