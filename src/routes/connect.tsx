@@ -388,7 +388,7 @@ function ConnectPage() {
                   setLoadingProperty(prop.propertyId);
                   void navigate({
                     to: "/results",
-                    search: { propertyId: prop.propertyId, propertyName: prop.displayName, days: 30, bingSiteUrl: selectedBingSite || "" },
+                    search: { propertyId: prop.propertyId, propertyName: prop.displayName, days: 30, bingSiteUrl: selectedBingSite || "", hosts: "" },
                   });
                 }}
                 className={`block w-full text-left px-5 py-4 hover:bg-muted/40 active:bg-muted/70 transition-colors ${
