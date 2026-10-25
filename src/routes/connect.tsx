@@ -245,7 +245,7 @@ function ConnectPage() {
             You need to connect your Google account first.
           </p>
           <a
-            href="/auth/google"
+            href="/auth/google?force=1"
             onClick={() => {
               trackEvent("connect_google_click", { source: "connect_gate" });
             }}
@@ -276,7 +276,7 @@ function ConnectPage() {
             {error}
           </p>
           <a
-            href="/auth/google"
+            href="/auth/google?force=1"
             onClick={() => {
               trackEvent("connect_google_click", { source: "connect_error" });
             }}
@@ -309,7 +309,7 @@ function ConnectPage() {
           </p>
           <div className="flex gap-3 justify-center pt-2">
             <a
-              href="/auth/google"
+              href="/auth/google?force=1"
               onClick={() => {
                 trackEvent("connect_google_click", { source: "connect_no_properties" });
               }}
@@ -388,7 +388,7 @@ function ConnectPage() {
                   setLoadingProperty(prop.propertyId);
                   void navigate({
                     to: "/results",
-                    search: { propertyId: prop.propertyId, propertyName: prop.displayName, days: 30, bingSiteUrl: selectedBingSite || "" },
+                    search: { propertyId: prop.propertyId, propertyName: prop.displayName, days: 30, bingSiteUrl: selectedBingSite || "", hosts: "", exclude: "" },
                   });
                 }}
                 className={`block w-full text-left px-5 py-4 hover:bg-muted/40 active:bg-muted/70 transition-colors ${

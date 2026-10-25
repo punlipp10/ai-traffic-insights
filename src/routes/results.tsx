@@ -248,7 +248,14 @@ function getDemoReport(days: number): AITrafficReport {
     ].filter((e) => e.conversions > 0),
     state: "meaningful",
     domain: "techblog-example.com",
+    hosts: [],
+    hostFilter: [],
+    excludePaths: [],
   };
+}
+
+function parseList(value: string): string[] {
+  return value.split(",").map((v) => v.trim()).filter(Boolean);
 }
 
 // ---------------------------------------------------------------------------
@@ -259,12 +266,16 @@ export const Route = createFileRoute("/results")({
     propertyName: (search.propertyName as string) || "",
     days: Number(search.days) || 30,
     bingSiteUrl: (search.bingSiteUrl as string) || "",
+    hosts: (search.hosts as string) || "",
+    exclude: (search.exclude as string) || "",
   }),
   loaderDeps: ({ search }) => ({
     propertyId: search.propertyId,
     propertyName: search.propertyName,
     days: search.days,
     bingSiteUrl: search.bingSiteUrl,
+    hosts: search.hosts,
+    exclude: search.exclude,
   }),
   head: () => ({
     meta: [
@@ -286,6 +297,8 @@ export const Route = createFileRoute("/results")({
           propertyId: deps.propertyId,
           propertyName: deps.propertyName,
           days: deps.days,
+          hosts: parseList(deps.hosts),
+          excludePaths: parseList(deps.exclude),
         },
       });
       // Must await — CF Workers kill unawaited promises after response
@@ -969,12 +982,219 @@ function DigestCard({
   );
 }
 
+// Report filters: restrict to specific hostnames (several sites sharing one
+// GA4 property / GTM container) and exclude landing-page prefixes (e.g. app
+// dashboards under /sites/). Host section is hidden when there's one host.
+function ReportFilters({
+  hosts,
+  selectedHosts,
+  excludePaths,
+  pending,
+  onApply,
+}: {
+  hosts: AITrafficReport["hosts"];
+  selectedHosts: string[];
+  excludePaths: string[];
+  pending: boolean;
+  onApply: (next: { hosts: string[]; excludePaths: string[] }) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draftHosts, setDraftHosts] = useState<string[]>(selectedHosts);
+  const [draftPaths, setDraftPaths] = useState<string[]>(excludePaths);
+  const [pathInput, setPathInput] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  // Keep selected hosts listed even if they had no AI sessions this period
+  const hostOptions = useMemo(() => {
+    const list = [...hosts];
+    for (const h of selectedHosts) {
+      if (!list.some((o) => o.host === h)) list.push({ host: h, sessions: 0 });
+    }
+    return list;
+  }, [hosts, selectedHosts]);
+
+  const showHosts = hostOptions.length > 1 || selectedHosts.length > 0;
+  const activeCount = selectedHosts.length + excludePaths.length;
+
+  function normalizePath(raw: string) {
+    const p = raw.trim();
+    if (!p) return "";
+    return p.startsWith("/") ? p : `/${p}`;
+  }
+
+  // Include whatever is still typed in the input, so Apply never drops it
+  function pathsWithInput() {
+    const extra = pathInput.split(",").map(normalizePath).filter(Boolean);
+    return Array.from(new Set([...draftPaths, ...extra]));
+  }
+
+  function addPathInput() {
+    setDraftPaths(pathsWithInput());
+    setPathInput("");
+  }
+
+  const sameSet = (a: string[], b: string[]) =>
+    a.length === b.length && a.every((x) => b.includes(x));
+  const dirty =
+    !sameSet(draftHosts, selectedHosts) || !sameSet(pathsWithInput(), excludePaths);
+
+  return (
+    <div ref={ref} className="relative print-hide">
+      <button
+        type="button"
+        onClick={() => {
+          setDraftHosts(selectedHosts);
+          setDraftPaths(excludePaths);
+          setPathInput("");
+          setOpen((v) => !v);
+        }}
+        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${activeCount > 0 ? "bg-primary/10 text-primary" : "bg-muted/60 text-muted-foreground hover:text-foreground"}`}
+        style={{ fontFamily: bodyFont }}
+      >
+        {pending && (
+          <span className="w-2.5 h-2.5 rounded-full border border-primary border-t-transparent animate-spin inline-block flex-none" />
+        )}
+        Filters{activeCount > 0 && ` · ${activeCount}`}
+        <svg
+          className={`w-3 h-3 flex-none transition-transform ${open ? "rotate-180" : ""}`}
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute top-full right-0 mt-1.5 z-30 w-[300px] max-w-[calc(100vw-2.5rem)] rounded-xl border border-border bg-card shadow-lg overflow-hidden">
+          {showHosts && (
+            <div className="border-b border-border/60">
+              <p className="px-4 pt-3 text-[11px] font-semibold text-foreground" style={{ fontFamily: bodyFont }}>
+                Hosts
+              </p>
+              <p className="px-4 pb-2 text-[11px] text-muted-foreground/70" style={{ fontFamily: bodyFont }}>
+                Only count AI visits to these hosts. Leave all unchecked to include every host.
+              </p>
+              <div className="max-h-52 overflow-y-auto pb-1">
+                {hostOptions.map((o) => (
+                  <label
+                    key={o.host}
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs text-muted-foreground hover:bg-muted/50 cursor-pointer"
+                    style={{ fontFamily: bodyFont }}
+                  >
+                    <input
+                      type="checkbox"
+                      className="accent-primary flex-none"
+                      checked={draftHosts.includes(o.host)}
+                      onChange={(e) =>
+                        setDraftHosts((prev) => (e.target.checked ? [...prev, o.host] : prev.filter((h) => h !== o.host)))
+                      }
+                    />
+                    <span className="truncate flex-1">{o.host}</span>
+                    <span className="tabular-nums text-muted-foreground/50">{o.sessions.toLocaleString("en-US")}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="px-4 py-3">
+            <p className="text-[11px] font-semibold text-foreground" style={{ fontFamily: bodyFont }}>
+              Exclude pages
+            </p>
+            <p className="pb-2 text-[11px] text-muted-foreground/70" style={{ fontFamily: bodyFont }}>
+              Ignore visits that land on paths starting with:
+            </p>
+            {draftPaths.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pb-2">
+                {draftPaths.map((p) => (
+                  <span
+                    key={p}
+                    className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] text-foreground font-mono"
+                  >
+                    {p}
+                    <button
+                      type="button"
+                      aria-label={`Remove ${p}`}
+                      onClick={() => setDraftPaths((prev) => prev.filter((x) => x !== p))}
+                      className="text-muted-foreground/60 hover:text-foreground cursor-pointer"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <input
+              type="text"
+              value={pathInput}
+              onChange={(e) => setPathInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === ",") {
+                  e.preventDefault();
+                  addPathInput();
+                }
+              }}
+              onBlur={addPathInput}
+              placeholder="/sites/"
+              className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-mono text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+
+          <div className="flex items-center justify-between border-t border-border/60 px-4 py-2">
+            <button
+              type="button"
+              onClick={() => {
+                setDraftHosts([]);
+                setDraftPaths([]);
+                setPathInput("");
+              }}
+              className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors cursor-pointer"
+              style={{ fontFamily: bodyFont }}
+            >
+              Clear all
+            </button>
+            <button
+              type="button"
+              disabled={!dirty}
+              onClick={() => {
+                const paths = pathsWithInput();
+                setOpen(false);
+                onApply({ hosts: draftHosts, excludePaths: paths });
+              }}
+              className="rounded-full bg-primary px-3 py-1 text-[11px] font-semibold text-primary-foreground disabled:opacity-40 cursor-pointer disabled:cursor-default"
+              style={{ fontFamily: bodyFont }}
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ResultsPage() {
   const { report, error, bingCopilot } = Route.useLoaderData();
-  const { propertyId, propertyName, days, bingSiteUrl } = Route.useSearch();
+  const { propertyId, propertyName, days, bingSiteUrl, hosts, exclude } = Route.useSearch();
   const navigate = useNavigate();
   const [copied, setCopied] = useState<"summary" | "error" | null>(null);
   const [loadingPeriod, setLoadingPeriod] = useState<number | null>(null);
+  const [loadingFilters, setLoadingFilters] = useState(false);
+
+  // Filter reload finished (or failed) once new loader data arrives
+  useEffect(() => {
+    setLoadingFilters(false);
+  }, [report, error]);
   const [recentProps, setRecentProps] = useState<RecentProperty[]>([]);
   const [showPropDropdown, setShowPropDropdown] = useState(false);
   const propDropdownRef = useRef<HTMLDivElement>(null);
@@ -1015,7 +1235,7 @@ function ResultsPage() {
 
   useEffect(() => {
     if (!report || error) return;
-    loadedKeys.current.add(`${propertyId}:${days}`);
+    loadedKeys.current.add(`${propertyId}:${days}:${hosts}:${exclude}`);
     trackEvent("report_viewed", {
       days_selected: days,
       result_state: report.state,
@@ -1024,7 +1244,7 @@ function ResultsPage() {
       ai_sources_count: report.sourceBreakdown.length,
       top_ai_source: report.topSource?.label,
     });
-  }, [days, error, report]);
+  }, [days, error, report, propertyId, hosts, exclude]);
 
   if (error || !report) {
     // Sanitise error: strip HTML tags (e.g. Google 429 error pages) and cap length
@@ -1160,7 +1380,7 @@ function ResultsPage() {
                           setShowPropDropdown(false);
                           if (rp.propertyId === propertyId) return;
                           trackEvent("recent_property_switched", { source: "results_dropdown" });
-                          void navigate({ to: "/results", search: { propertyId: rp.propertyId, propertyName: rp.propertyName, days, bingSiteUrl } });
+                          void navigate({ to: "/results", search: { propertyId: rp.propertyId, propertyName: rp.propertyName, days, bingSiteUrl, hosts: "", exclude: "" } });
                         }}
                         className={`block w-full text-left px-4 py-2.5 text-xs hover:bg-muted/50 transition-colors ${rp.propertyId === propertyId ? "text-primary font-semibold" : "text-muted-foreground"}`}
                         style={{ fontFamily: bodyFont }}
@@ -1205,6 +1425,25 @@ function ResultsPage() {
             </p>
           </div>
 
+          <div className="flex items-center gap-2">
+          <ReportFilters
+            hosts={report.hosts}
+            selectedHosts={report.hostFilter}
+            excludePaths={report.excludePaths}
+            pending={loadingFilters}
+            onApply={(next) => {
+              setLoadingFilters(true);
+              trackEvent("results_filters_changed", {
+                hosts_count: next.hosts.length,
+                exclude_paths_count: next.excludePaths.length,
+              });
+              void navigate({
+                to: "/results",
+                search: { propertyId, propertyName, days, bingSiteUrl, hosts: next.hosts.join(","), exclude: next.excludePaths.join(",") },
+              });
+            }}
+          />
+
           {/* Period switcher */}
           <div className="flex items-center gap-1 bg-muted/60 rounded-lg p-0.5 print-hide">
             {PERIOD_OPTIONS.map((opt) =>
@@ -1225,12 +1464,12 @@ function ResultsPage() {
                       from_days: days,
                       to_days: opt.days,
                     });
-                    const isCached = loadedKeys.current.has(`${propertyId}:${opt.days}`);
+                    const isCached = loadedKeys.current.has(`${propertyId}:${opt.days}:${hosts}:${exclude}`);
                     if (!isCached) {
                       setLoadingPeriod(opt.days);
                       setTimeout(() => setLoadingPeriod(null), 5000);
                     }
-                    void navigate({ to: "/results", search: { propertyId, propertyName, days: opt.days, bingSiteUrl } });
+                    void navigate({ to: "/results", search: { propertyId, propertyName, days: opt.days, bingSiteUrl, hosts, exclude } });
                   }}
                   className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1.5"
                   style={{ fontFamily: bodyFont }}
@@ -1244,11 +1483,13 @@ function ResultsPage() {
             )}
           </div>
 
+          </div>
+
           {/* Period-switch loading: spinner shown on clicked button; pendingComponent handles the full loading screen */}
         </div>
 
         {/* Desktop two-column grid */}
-        <div className={`md:grid md:grid-cols-[1fr_340px] md:gap-8 md:items-start lg:grid-cols-[1fr_380px] transition-opacity duration-200${loadingPeriod !== null ? ' opacity-50 pointer-events-none select-none' : ''}`}>
+        <div className={`md:grid md:grid-cols-[1fr_340px] md:gap-8 md:items-start lg:grid-cols-[1fr_380px] transition-opacity duration-200${loadingPeriod !== null || loadingFilters ? ' opacity-50 pointer-events-none select-none' : ''}`}>
 
           {/* LEFT COLUMN */}
           <div>

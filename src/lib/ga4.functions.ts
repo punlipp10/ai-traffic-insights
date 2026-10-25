@@ -106,12 +106,46 @@ export const listGA4Properties = createServerFn({ method: "GET" }).handler(
 
 export const fetchAITrafficReport = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: { propertyId: string; propertyName?: string; days?: number }) => input
+    (input: { propertyId: string; propertyName?: string; days?: number; hosts?: string[]; excludePaths?: string[] }) => input
   )
   .handler(async ({ data }) => {
     const accessToken = await getAccessToken();
     const propertyId = data.propertyId;
     const days = data.days || 30;
+    const hostFilter = (data.hosts || []).filter(Boolean);
+    const excludePaths = (data.excludePaths || [])
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .map((p) => (p.startsWith("/") ? p : `/${p}`));
+    // Drop sessions whose landing page starts with an excluded prefix
+    // (e.g. /sites/ — app users opening their own dashboard from ChatGPT).
+    const pathExpr =
+      excludePaths.length > 0
+        ? {
+            notExpression: {
+              orGroup: {
+                expressions: excludePaths.map((value) => ({
+                  filter: {
+                    fieldName: "landingPage",
+                    stringFilter: { value, matchType: "BEGINS_WITH" },
+                  },
+                })),
+              },
+            },
+          }
+        : null;
+    // Restrict to the selected hostnames (e.g. drop customer sites that share
+    // the same GTM container). Empty = all hosts.
+    const hostExpr =
+      hostFilter.length > 0
+        ? { filter: { fieldName: "hostName", inListFilter: { values: hostFilter } } }
+        : null;
+    const combine = (...exprs: Array<Record<string, unknown> | null | undefined>) => {
+      const list = exprs.filter((e): e is Record<string, unknown> => !!e);
+      if (list.length === 0) return undefined;
+      return list.length === 1 ? list[0] : { andGroup: { expressions: list } };
+    };
+    const scoped = (filter?: Record<string, unknown>) => combine(filter, hostExpr, pathExpr);
 
     const today = new Date();
     const periodStart = new Date(today);
@@ -139,8 +173,28 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
         { name: "newUsers" },
         { name: "conversions" },
       ],
+      dimensionFilter: scoped(),
       limit: "10000",
     });
+
+    // AI sessions per hostname (current period, ignoring the host filter) —
+    // powers the host picker so users can see which hosts exist.
+    const hostReport = await runGA4Report(accessToken, propertyId, {
+      dateRanges: [{ startDate: fmt(periodStart), endDate: fmt(today) }],
+      dimensions: [{ name: "hostName" }, { name: "sessionSource" }],
+      metrics: [{ name: "sessions" }],
+      dimensionFilter: combine(pathExpr),
+      limit: "10000",
+    });
+    const hostSessions = new Map<string, number>();
+    for (const row of hostReport.rows || []) {
+      const host = row.dimensionValues?.[0]?.value || "";
+      const source = row.dimensionValues?.[1]?.value || "";
+      if (!host || host === "(not set)" || !matchAISource(source)) continue;
+      hostSessions.set(host, (hostSessions.get(host) || 0) + parseInt(row.metricValues?.[0]?.value || "0"));
+    }
+    const hosts = Array.from(hostSessions, ([host, sessions]) => ({ host, sessions }))
+      .sort((a, b) => b.sessions - a.sessions);
 
     // Parse multi-date-range data using explicit dateRange dimension
     const currentSources = new Map<
@@ -190,12 +244,12 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
         ],
         dimensions: [{ name: "date" }],
         metrics: [{ name: "sessions" }],
-        dimensionFilter: {
+        dimensionFilter: scoped({
           filter: {
             fieldName: "sessionSource",
             inListFilter: { values: aiSourceValues },
           },
-        },
+        }),
         orderBys: [{ dimension: { dimensionName: "date" }, desc: false }],
         limit: String(days + 1),
       });
@@ -224,7 +278,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
         ],
         dimensions: [{ name: "landingPagePlusQueryString" }],
         metrics: [{ name: "sessions" }],
-        dimensionFilter: {
+        dimensionFilter: scoped({
           andGroup: {
             expressions: [
               {
@@ -243,7 +297,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
               },
             ],
           },
-        },
+        }),
         orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
         limit: "25",
       });
@@ -265,12 +319,12 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
         dateRanges: [{ startDate: fmt(periodStart), endDate: fmt(today) }],
         dimensions: [{ name: "eventName" }],
         metrics: [{ name: "conversions" }],
-        dimensionFilter: {
+        dimensionFilter: scoped({
           filter: {
             fieldName: "sessionSource",
             inListFilter: { values: aiSourceValues },
           },
-        },
+        }),
         orderBys: [{ metric: { metricName: "conversions" }, desc: true }],
         limit: "50",
       });
@@ -289,7 +343,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
       ],
       dimensions: [{ name: "landingPagePlusQueryString" }],
       metrics: [{ name: "sessions" }],
-      dimensionFilter: {
+      dimensionFilter: scoped({
         andGroup: {
           expressions: [
             {
@@ -308,7 +362,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
             },
           ],
         },
-      },
+      }),
       orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
       limit: "5",
     });
@@ -416,6 +470,9 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
       conversionEvents,
       state,
       domain,
+      hosts,
+      hostFilter,
+      excludePaths,
     };
 
     return { report };

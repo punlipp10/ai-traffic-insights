@@ -123,6 +123,15 @@ export interface AITrafficReport {
   }>;
   state: "meaningful" | "low" | "none";
   domain: string | null;
+  /** AI sessions per hostname in the current period, ignoring hostFilter */
+  hosts: Array<{
+    host: string;
+    sessions: number;
+  }>;
+  /** Hostnames the report is restricted to; empty = all hosts */
+  hostFilter: string[];
+  /** Landing-page prefixes excluded from every report, e.g. "/sites/" */
+  excludePaths: string[];
 }
 
 export interface GA4Property {

@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useSession } from "@tanstack/react-start/server";
+import { getSessionConfig } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/auth/google")({
   server: {
@@ -11,7 +13,22 @@ export const Route = createFileRoute("/auth/google")({
 
         const url = new URL(request.url);
         const origin = url.origin;
-        const redirectAfter = url.searchParams.get("redirect") ?? "/connect";
+        const requested = url.searchParams.get("redirect") ?? "/connect";
+        // Only allow relative paths to prevent open-redirect attacks
+        const redirectAfter =
+          requested.startsWith("/") && !requested.startsWith("//") ? requested : "/connect";
+
+        // Already connected: skip the Google consent screen. If the stored
+        // token turns out to be dead, /connect links back here with ?force=1.
+        if (!url.searchParams.has("force")) {
+          const session = await useSession<{ googleRefreshToken?: string }>(getSessionConfig());
+          if (session.data.googleRefreshToken) {
+            return new Response(null, {
+              status: 302,
+              headers: { Location: redirectAfter },
+            });
+          }
+        }
 
         const authUrl = new URL(
           "https://accounts.google.com/o/oauth2/v2/auth"
