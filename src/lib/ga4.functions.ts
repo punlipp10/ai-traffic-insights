@@ -106,22 +106,46 @@ export const listGA4Properties = createServerFn({ method: "GET" }).handler(
 
 export const fetchAITrafficReport = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: { propertyId: string; propertyName?: string; days?: number; hosts?: string[] }) => input
+    (input: { propertyId: string; propertyName?: string; days?: number; hosts?: string[]; excludePaths?: string[] }) => input
   )
   .handler(async ({ data }) => {
     const accessToken = await getAccessToken();
     const propertyId = data.propertyId;
     const days = data.days || 30;
     const hostFilter = (data.hosts || []).filter(Boolean);
-    // Restrict every report to the selected hostnames (e.g. drop customer
-    // sites that share the same GTM container). Empty = all hosts.
-    const scoped = (filter?: Record<string, unknown>) => {
-      if (hostFilter.length === 0) return filter;
-      const hostExpr = {
-        filter: { fieldName: "hostName", inListFilter: { values: hostFilter } },
-      };
-      return filter ? { andGroup: { expressions: [filter, hostExpr] } } : hostExpr;
+    const excludePaths = (data.excludePaths || [])
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .map((p) => (p.startsWith("/") ? p : `/${p}`));
+    // Drop sessions whose landing page starts with an excluded prefix
+    // (e.g. /sites/ — app users opening their own dashboard from ChatGPT).
+    const pathExpr =
+      excludePaths.length > 0
+        ? {
+            notExpression: {
+              orGroup: {
+                expressions: excludePaths.map((value) => ({
+                  filter: {
+                    fieldName: "landingPage",
+                    stringFilter: { value, matchType: "BEGINS_WITH" },
+                  },
+                })),
+              },
+            },
+          }
+        : null;
+    // Restrict to the selected hostnames (e.g. drop customer sites that share
+    // the same GTM container). Empty = all hosts.
+    const hostExpr =
+      hostFilter.length > 0
+        ? { filter: { fieldName: "hostName", inListFilter: { values: hostFilter } } }
+        : null;
+    const combine = (...exprs: Array<Record<string, unknown> | null | undefined>) => {
+      const list = exprs.filter((e): e is Record<string, unknown> => !!e);
+      if (list.length === 0) return undefined;
+      return list.length === 1 ? list[0] : { andGroup: { expressions: list } };
     };
+    const scoped = (filter?: Record<string, unknown>) => combine(filter, hostExpr, pathExpr);
 
     const today = new Date();
     const periodStart = new Date(today);
@@ -153,12 +177,13 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
       limit: "10000",
     });
 
-    // AI sessions per hostname (current period, unscoped) — powers the host
-    // picker so users can see which hosts exist before filtering.
+    // AI sessions per hostname (current period, ignoring the host filter) —
+    // powers the host picker so users can see which hosts exist.
     const hostReport = await runGA4Report(accessToken, propertyId, {
       dateRanges: [{ startDate: fmt(periodStart), endDate: fmt(today) }],
       dimensions: [{ name: "hostName" }, { name: "sessionSource" }],
       metrics: [{ name: "sessions" }],
+      dimensionFilter: combine(pathExpr),
       limit: "10000",
     });
     const hostSessions = new Map<string, number>();
@@ -447,6 +472,7 @@ export const fetchAITrafficReport = createServerFn({ method: "POST" })
       domain,
       hosts,
       hostFilter,
+      excludePaths,
     };
 
     return { report };

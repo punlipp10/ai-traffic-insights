@@ -130,6 +130,8 @@ export interface AITrafficReport {
   }>;
   /** Hostnames the report is restricted to; empty = all hosts */
   hostFilter: string[];
+  /** Landing-page prefixes excluded from every report, e.g. "/sites/" */
+  excludePaths: string[];
 }
 
 export interface GA4Property {
