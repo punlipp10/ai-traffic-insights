@@ -1002,6 +1002,8 @@ function ReportFilters({
   const [draftHosts, setDraftHosts] = useState<string[]>(selectedHosts);
   const [draftPaths, setDraftPaths] = useState<string[]>(excludePaths);
   const [pathInput, setPathInput] = useState("");
+  // Right-align the popover under the button unless that would push it off the left edge (wrapped header on mobile)
+  const [alignLeft, setAlignLeft] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1055,6 +1057,7 @@ function ReportFilters({
           setDraftHosts(selectedHosts);
           setDraftPaths(excludePaths);
           setPathInput("");
+          if (ref.current) setAlignLeft(ref.current.getBoundingClientRect().right < 320);
           setOpen((v) => !v);
         }}
         className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${activeCount > 0 ? "bg-primary/10 text-primary" : "bg-muted/60 text-muted-foreground hover:text-foreground"}`}
@@ -1075,7 +1078,7 @@ function ReportFilters({
       </button>
 
       {open && (
-        <div className="absolute top-full right-0 mt-1.5 z-30 w-[300px] max-w-[calc(100vw-2.5rem)] rounded-xl border border-border bg-card shadow-lg overflow-hidden">
+        <div className={`absolute top-full ${alignLeft ? "left-0" : "right-0"} mt-1.5 z-30 w-[300px] max-w-[calc(100vw-2.5rem)] rounded-xl border border-border bg-card shadow-lg overflow-hidden`}>
           {showHosts && (
             <div className="border-b border-border/60">
               <p className="px-4 pt-3 text-[11px] font-semibold text-foreground" style={{ fontFamily: bodyFont }}>
