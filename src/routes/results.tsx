@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { fetchAITrafficReport } from "@/lib/ga4.functions";
@@ -1188,7 +1188,15 @@ function ResultsPage() {
   const { propertyId, propertyName, days, bingSiteUrl, hosts, exclude } = Route.useSearch();
   const navigate = useNavigate();
   const [copied, setCopied] = useState<"summary" | "error" | null>(null);
-  const [loadingPeriod, setLoadingPeriod] = useState<number | null>(null);
+  // Period being loaded, taken from the router's pending location so the
+  // spinner stays up until the new report lands (90d/12m can take >5s)
+  const pendingDays = useRouterState({
+    select: (s) =>
+      s.status === "pending" && s.location.pathname === "/results"
+        ? Number((s.location.search as { days?: unknown }).days) || 30
+        : null,
+  });
+  const loadingPeriod = pendingDays !== null && pendingDays !== days ? pendingDays : null;
   const [loadingFilters, setLoadingFilters] = useState(false);
 
   // Filter reload finished (or failed) once new loader data arrives
@@ -1198,7 +1206,6 @@ function ResultsPage() {
   const [recentProps, setRecentProps] = useState<RecentProperty[]>([]);
   const [showPropDropdown, setShowPropDropdown] = useState(false);
   const propDropdownRef = useRef<HTMLDivElement>(null);
-  const loadedKeys = useRef<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null); // kept for future BWT re-enable
 
   const mergedSources = useMemo(() => {
@@ -1235,7 +1242,6 @@ function ResultsPage() {
 
   useEffect(() => {
     if (!report || error) return;
-    loadedKeys.current.add(`${propertyId}:${days}:${hosts}:${exclude}`);
     trackEvent("report_viewed", {
       days_selected: days,
       result_state: report.state,
@@ -1445,7 +1451,7 @@ function ResultsPage() {
           />
 
           {/* Period switcher */}
-          <div className="flex items-center gap-1 bg-muted/60 rounded-lg p-0.5 print-hide">
+          <div className={`flex items-center gap-1 bg-muted/60 rounded-lg p-0.5 print-hide${loadingPeriod !== null ? " pointer-events-none" : ""}`}>
             {PERIOD_OPTIONS.map((opt) =>
               opt.days === days ? (
                 <span
@@ -1464,11 +1470,6 @@ function ResultsPage() {
                       from_days: days,
                       to_days: opt.days,
                     });
-                    const isCached = loadedKeys.current.has(`${propertyId}:${opt.days}:${hosts}:${exclude}`);
-                    if (!isCached) {
-                      setLoadingPeriod(opt.days);
-                      setTimeout(() => setLoadingPeriod(null), 5000);
-                    }
                     void navigate({ to: "/results", search: { propertyId, propertyName, days: opt.days, bingSiteUrl, hosts, exclude } });
                   }}
                   className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1.5"
