@@ -15,6 +15,8 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as BlogBestGeoAeoPluginsWordpressRouteImport } from './routes/blog.best-geo-aeo-plugins-wordpress'
 import { Route as AuthGoogleRouteImport } from './routes/auth.google'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthBingRouteImport } from './routes/auth.bing'
@@ -50,6 +52,17 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogBestGeoAeoPluginsWordpressRoute =
+  BlogBestGeoAeoPluginsWordpressRouteImport.update({
+    id: '/blog/best-geo-aeo-plugins-wordpress',
+    path: '/blog/best-geo-aeo-plugins-wordpress',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthGoogleRoute = AuthGoogleRouteImport.update({
   id: '/auth/google',
   path: '/auth/google',
@@ -81,6 +94,8 @@ export interface FileRoutesByFullPath {
   '/auth/bing': typeof AuthBingRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/google': typeof AuthGoogleRoute
+  '/blog/best-geo-aeo-plugins-wordpress': typeof BlogBestGeoAeoPluginsWordpressRoute
+  '/blog/': typeof BlogIndexRoute
   '/auth/bing/callback': typeof AuthBingCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -93,6 +108,8 @@ export interface FileRoutesByTo {
   '/auth/bing': typeof AuthBingRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/google': typeof AuthGoogleRoute
+  '/blog/best-geo-aeo-plugins-wordpress': typeof BlogBestGeoAeoPluginsWordpressRoute
+  '/blog': typeof BlogIndexRoute
   '/auth/bing/callback': typeof AuthBingCallbackRoute
 }
 export interface FileRoutesById {
@@ -106,6 +123,8 @@ export interface FileRoutesById {
   '/auth/bing': typeof AuthBingRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/google': typeof AuthGoogleRoute
+  '/blog/best-geo-aeo-plugins-wordpress': typeof BlogBestGeoAeoPluginsWordpressRoute
+  '/blog/': typeof BlogIndexRoute
   '/auth/bing/callback': typeof AuthBingCallbackRoute
 }
 export interface FileRouteTypes {
@@ -120,6 +139,8 @@ export interface FileRouteTypes {
     | '/auth/bing'
     | '/auth/callback'
     | '/auth/google'
+    | '/blog/best-geo-aeo-plugins-wordpress'
+    | '/blog/'
     | '/auth/bing/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,6 +153,8 @@ export interface FileRouteTypes {
     | '/auth/bing'
     | '/auth/callback'
     | '/auth/google'
+    | '/blog/best-geo-aeo-plugins-wordpress'
+    | '/blog'
     | '/auth/bing/callback'
   id:
     | '__root__'
@@ -144,6 +167,8 @@ export interface FileRouteTypes {
     | '/auth/bing'
     | '/auth/callback'
     | '/auth/google'
+    | '/blog/best-geo-aeo-plugins-wordpress'
+    | '/blog/'
     | '/auth/bing/callback'
   fileRoutesById: FileRoutesById
 }
@@ -157,6 +182,8 @@ export interface RootRouteChildren {
   AuthBingRoute: typeof AuthBingRouteWithChildren
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthGoogleRoute: typeof AuthGoogleRoute
+  BlogBestGeoAeoPluginsWordpressRoute: typeof BlogBestGeoAeoPluginsWordpressRoute
+  BlogIndexRoute: typeof BlogIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -201,6 +228,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/best-geo-aeo-plugins-wordpress': {
+      id: '/blog/best-geo-aeo-plugins-wordpress'
+      path: '/blog/best-geo-aeo-plugins-wordpress'
+      fullPath: '/blog/best-geo-aeo-plugins-wordpress'
+      preLoaderRoute: typeof BlogBestGeoAeoPluginsWordpressRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/google': {
@@ -256,6 +297,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthBingRoute: AuthBingRouteWithChildren,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthGoogleRoute: AuthGoogleRoute,
+  BlogBestGeoAeoPluginsWordpressRoute: BlogBestGeoAeoPluginsWordpressRoute,
+  BlogIndexRoute: BlogIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
