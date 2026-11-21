@@ -14,6 +14,67 @@ export const Route = createFileRoute("/")({
     links: [
       { rel: "canonical", href: "https://isaisendingmetraffic.com/" },
     ],
+    // Homepage FAQ schema lives here (not in __root) so other pages,
+    // which carry their own FAQPage, don't output two.
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "What is IsAISendingMeTraffic.com?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "It's a simple way to check whether AI tools like ChatGPT are already sending traffic to your website. Connect your Google Analytics account and instantly see referral traffic from AI sources like ChatGPT, Perplexity, Claude, Gemini, Grok, and DeepSeek.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Does it cost anything?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Nope. You can run the check for free.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "What does AI traffic mean?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "It means visits to your site that appear to have come from AI tools and assistants, based on the referral data GA4 gives us. It's helpful, but it's not perfect. Some AI-driven visits may still be hidden, unattributed, or grouped somewhere else.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "What if it says I'm not getting AI traffic yet?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "That's actually pretty normal. A lot of small businesses are still very early here. A low number does not mean this channel is not important. It usually just means the traffic is still small, hard to spot, or has room to grow.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Does this change anything in my GA4 account?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Not at all. This is read-only, so nothing gets changed or reconfigured.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Why should I care if AI is sending me traffic?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Because it can be an early signal that people are already discovering your business in new ways. Even a small amount of AI traffic can be interesting. It may mean your site is starting to show up in the tools people use to research, compare options, and make decisions.",
+          },
+        },
+      ],
+    }),
+      },
+    ],
   }),
   component: LandingPage,
 });
@@ -115,6 +176,14 @@ function LandingPage() {
       {/* Footer */}
       <footer className="px-7 pb-6 flex flex-col items-center gap-1.5">
           <div className="flex items-center gap-3">
+            <Link
+              to="/blog"
+              className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+              style={{ fontFamily: "'Figtree', sans-serif" }}
+            >
+              Blog
+            </Link>
+            <span className="text-border text-xs" aria-hidden="true">·</span>
             <Link
               to="/faq"
               className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
