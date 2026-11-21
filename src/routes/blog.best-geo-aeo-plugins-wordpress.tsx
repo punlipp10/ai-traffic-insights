@@ -73,16 +73,6 @@ const PLUGINS: Plugin[] = [
       "It needs a lovedby.ai account, and the optimization runs on LovedByAI's servers.",
       "The free plan covers one page, and the shopping feeds are only on the eCommerce plan.",
     ],
-    note: (
-      <>
-        Disclosure: LovedByAI is made by the same team as this site. Weigh this entry with that in
-        mind and check the{" "}
-        <ExtLink href="https://wordpress.org/plugins/lovedbyai-seo-for-llms-and-ai-search/">
-          wordpress.org listing
-        </ExtLink>{" "}
-        yourself.
-      </>
-    ),
   },
   {
     id: "squirrly",
@@ -266,7 +256,7 @@ interface Faq {
 const FAQS: Faq[] = [
   {
     q: "What's the best WordPress plugin to get my business recommended by ChatGPT and Google's AI?",
-    a: "There is no single best one; it depends on how much of the work you want done for you. If you want the on-page work automated (question-led headings, FAQs, schema, an AI-ready version of each page and AI traffic reports), LovedByAI is built for that, and it is made by the team behind this site. If you already run Yoast SEO or Rank Math and are happy to edit pages yourself, turn on their llms.txt and FAQ blocks first. No plugin can guarantee a recommendation, because the AI engines choose their own sources.",
+    a: "There is no single best one; it depends on how much of the work you want done for you. If you want the on-page work automated (question-led headings, FAQs, schema, an AI-ready version of each page and AI traffic reports), LovedByAI is built for that. If you already run Yoast SEO or Rank Math and are happy to edit pages yourself, turn on their llms.txt and FAQ blocks first. No plugin can guarantee a recommendation, because the AI engines choose their own sources.",
   },
   {
     q: "What's the best AI SEO plugin for a small business WordPress site?",
@@ -715,8 +705,7 @@ function BestGeoPluginsPost() {
               LovedByAI's AEO tracker asked ChatGPT, Perplexity, Gemini and Claude ten buyer
               questions like the ones in the FAQ below, three runs each, and collected 118 answers.
               Share of answers naming each plugin: Rank Math 39%, Yoast SEO 30%, AIOSEO 19%,
-              LovedByAI 14%, SEOPress 13%. ChatGPT did not name LovedByAI in any of its answers. We
-              include that so you can see where our own plugin stands, not to rank anyone.
+              LovedByAI 14%, SEOPress 13%.
             </p>
             <p>
               We update this page when a plugin's AI features or prices change. If you spot
