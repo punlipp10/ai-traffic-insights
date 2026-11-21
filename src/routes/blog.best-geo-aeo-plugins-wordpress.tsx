@@ -12,6 +12,8 @@ const DESCRIPTION =
   "Seven WordPress plugins for AI search compared: what each does for ChatGPT, Gemini and Google AI Overviews, who it suits and what it costs.";
 const OG_IMAGE = `${SITE}/social-share-image-isaisendingmetraffic.png`;
 
+const screenshot = (id: string) => `/blog/geo-plugins/${id}-wordpress-org.webp`;
+
 const displayFont = "'Barlow Condensed', sans-serif";
 const bodyFont = "'Figtree', sans-serif";
 
@@ -332,6 +334,7 @@ export const Route = createFileRoute("/blog/best-geo-aeo-plugins-wordpress")({
           operatingSystem: "WordPress",
           description: `Best for: ${p.bestFor}.`,
           url: p.url.split("?")[0],
+          image: `${SITE}${screenshot(p.id)}`,
         },
       })),
     };
@@ -582,6 +585,20 @@ function BestGeoPluginsPost() {
           {PLUGINS.map((p) => (
             <section key={p.id} aria-labelledby={p.id}>
               <H2 id={p.id}>{p.heading}</H2>
+              <figure className="mb-5">
+                <img
+                  src={screenshot(p.id)}
+                  alt={`${p.name} plugin page on wordpress.org`}
+                  width={1152}
+                  height={522}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-auto rounded-xl border border-border bg-card"
+                />
+                <figcaption className="mt-2 text-xs text-muted-foreground/70">
+                  {p.name} on wordpress.org, {UPDATED_LABEL}.
+                </figcaption>
+              </figure>
               <div className="space-y-3">
                 <p>{p.summary}</p>
                 <p className="text-foreground">
