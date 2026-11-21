@@ -483,11 +483,6 @@ function BestGeoPluginsPost() {
               feature and price was checked on the vendor's own site or wordpress.org listing on{" "}
               {UPDATED_LABEL}.
             </p>
-            <p className="rounded-xl border border-border bg-card px-4 py-3 text-sm">
-              Disclosure: isaisendingmetraffic.com is made by the team behind LovedByAI, one of the
-              plugins on this list. We have tried to describe every plugin, ours included, by what
-              its own listing and pricing page say, and to be plain about where each one stops.
-            </p>
           </div>
 
           <H2 id="quick-answer">
